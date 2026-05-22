@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2e7d32" />
+  <title>WMS — Estoque</title>
+  <style>
+    :root {
+      --verde-escuro: #2e7d32;
+      --verde-escuro-hover: #1b5e20;
+      --verde-claro: #4caf50;
+      --branco: #ffffff;
+      --cinza-borda: #cfd8dc;
+      --cinza-texto: #5f6b6d;
+      --texto-escuro: #1c2526;
+      --erro-bg: #fdecea;
+      --erro-borda: #f5c6cb;
+      --erro-texto: #b71c1c;
+      --sucesso-bg: #e8f5e9;
+      --sucesso-borda: #a5d6a7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--branco);
+      color: var(--texto-escuro);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: var(--branco);
+      width: 100%;
+      max-width: 900px;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(27, 94, 32, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .card__header {
+      background: linear-gradient(135deg, var(--verde-escuro), var(--verde-claro));
+      color: var(--branco);
+      padding: 2rem 1.75rem 1.75rem;
+      text-align: center;
+    }
+
+    .card__logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.85rem;
+      display: block;
+    }
+
+    .card__title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .card__subtitle {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+
+    .card__body {
+      padding: 1.75rem;
+    }
+
+    .barra-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .barra-topo__usuario {
+      font-size: 0.9rem;
+      color: var(--cinza-texto);
+    }
+
+    .barra-topo__acoes {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .secao {
+      border: 1.5px solid var(--cinza-borda);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .secao__titulo {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--verde-escuro);
+      margin-bottom: 1rem;
+    }
+
+    .campo {
+      margin-bottom: 1.15rem;
+    }
+
+    .campo__label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--texto-escuro);
+      margin-bottom: 0.4rem;
+    }
+
+    .campo__input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      font-size: 1rem;
+      color: var(--texto-escuro);
+      border: 1.5px solid var(--cinza-borda);
+      border-radius: 8px;
+      background: var(--branco);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+    }
+
+    .campo__input:focus {
+      outline: none;
+      border-color: var(--verde-claro);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.22);
+    }
+
+    .campo__input:disabled {
+      background: #f4f6f6;
+      color: #9aa5a6;
+      cursor: not-allowed;
+    }
+
+    .campo__ajuda {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--cinza-texto);
+    }
+
+    .botao {
+      padding: 0.8rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--branco);
+      background: var(--verde-escuro);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+
+    .botao:hover {
+      background: var(--verde-escuro-hover);
+    }
+
+    .botao:active {
+      transform: translateY(1px);
+    }
+
+    .botao:disabled {
+      background: #9aa5a6;
+      cursor: progress;
+    }
+
+    .botao--secundario {
+      background: var(--branco);
+      color: var(--verde-escuro);
+      border: 1.5px solid var(--cinza-borda);
+    }
+
+    .botao--secundario:hover {
+      background: #f4f6f6;
+      color: var(--verde-escuro-hover);
+    }
+
+    .botao--pequeno {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+    }
+
+    .mensagem {
+      margin-bottom: 1.1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1.5px solid transparent;
+      display: none;
+    }
+
+    .mensagem--erro {
+      display: block;
+      background: var(--erro-bg);
+      border-color: var(--erro-borda);
+      color: var(--erro-texto);
+    }
+
+    .mensagem--sucesso {
+      display: block;
+      background: var(--sucesso-bg);
+      border-color: var(--sucesso-borda);
+      color: var(--verde-escuro-hover);
+    }
+
+    .mensagem--sucesso strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .filtro {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .filtro .campo {
+      flex: 1 1 240px;
+      margin-bottom: 0;
+    }
+
+    .tabela-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--cinza-borda);
+    }
+
+    th {
+      background: #f4f6f6;
+      color: var(--cinza-texto);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    td.qtd, th.qtd {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    tr.linha-subtotal td {
+      background: #eef5ef;
+      color: var(--verde-escuro-hover);
+      font-weight: 700;
+    }
+
+    tr.linha-total td {
+      background: var(--sucesso-bg);
+      color: var(--verde-escuro-hover);
+      font-weight: 700;
+      border-top: 2px solid var(--sucesso-borda);
+    }
+
+    .registros {
+      margin-top: 0.85rem;
+      font-size: 0.82rem;
+      color: var(--cinza-texto);
+      text-align: right;
+    }
+
+    .vazio {
+      padding: 1rem;
+      text-align: center;
+      color: var(--cinza-texto);
+      font-size: 0.9rem;
+    }
+
+    .rodape {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+    }
+
+    .rodape a {
+      color: var(--verde-escuro);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .rodape a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .card__header { padding: 1.5rem 1.25rem; }
+      .card__body { padding: 1.5rem 1.25rem; }
+      .card__title { font-size: 1.2rem; }
+      .secao { padding: 1rem; }
+      .filtro { flex-direction: column; align-items: stretch; }
+      .filtro .botao { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <header class="card__header">
+      <svg class="card__logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="m3 7.5 9 4.5 9-4.5M12 12v9" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M7.5 5.25 16.5 9.75" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+      <h1 class="card__title">WMS — Estoque</h1>
+      <p class="card__subtitle">Visão consolidada por localização e produto</p>
+    </header>
+
+    <div class="card__body">
+      <div class="barra-topo">
+        <span class="barra-topo__usuario" id="barraUsuario"></span>
+        <span class="barra-topo__acoes">
+          <a class="botao botao--secundario botao--pequeno" href="menu.html">Menu</a>
+          <button class="botao botao--secundario botao--pequeno" type="button" id="botaoSair">Sair</button>
+        </span>
+      </div>
+
+      <div id="mensagem" class="mensagem" role="alert" aria-live="polite"></div>
+
+      <section class="secao" aria-labelledby="tituloEstoque">
+        <h2 class="secao__titulo" id="tituloEstoque">Estoque consolidado</h2>
+
+        <div class="filtro">
+          <div class="campo">
+            <label class="campo__label" for="campoBusca">Buscar por produto ou localização</label>
+            <input class="campo__input" type="text" id="campoBusca" autocomplete="off"
+              placeholder="Ex.: A-01-01, DOCA, SKU ou nome do produto" />
+          </div>
+          <button class="botao botao--secundario" type="button" id="botaoAtualizar">Atualizar</button>
+        </div>
+
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Localização</th>
+                <th scope="col">Produto</th>
+                <th scope="col" class="qtd">Quantidade</th>
+              </tr>
+            </thead>
+            <tbody id="corpoTabela"></tbody>
+          </table>
+        </div>
+        <div id="listaVazia" class="vazio" hidden>Nenhum item em estoque.</div>
+        <p class="registros" id="contadorRegistros" hidden></p>
+      </section>
+
+      <p class="rodape">
+        <a href="/status">Ver status do serviço</a>
+      </p>
+    </div>
+  </main>
+
+  <script src="sessao.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var usuario = exigirSessao();
+      if (!usuario) {
+        throw new Error('sem sessão');
+      }
+
+      function escaparHtml(texto) {
+        var div = document.createElement('div');
+        div.textContent = texto == null ? '' : String(texto);
+        return div.innerHTML;
+      }
+
+      var caixaMensagem = document.getElementById('mensagem');
+      var corpoTabela = document.getElementById('corpoTabela');
+      var listaVazia = document.getElementById('listaVazia');
+      var contadorRegistros = document.getElementById('contadorRegistros');
+      var campoBusca = document.getElementById('campoBusca');
+      var botaoAtualizar = document.getElementById('botaoAtualizar');
+
+      var estoqueAtual = [];
+      var totalGeralAtual = 0;
+
+      document.getElementById('barraUsuario').innerHTML =
+        escaparHtml(usuario.nome) + ' (' + escaparHtml(usuario.perfil) + ')';
+      document.getElementById('botaoSair').addEventListener('click', function () {
+        sair();
+      });
+
+      function exibirMensagem(tipo, htmlConteudo) {
+        caixaMensagem.className = 'mensagem mensagem--' + tipo;
+        caixaMensagem.innerHTML = htmlConteudo;
+        caixaMensagem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function limparMensagem() {
+        caixaMensagem.className = 'mensagem';
+        caixaMensagem.innerHTML = '';
+      }
+
+      function mensagemErroDaResposta(dados, fallback) {
+        if (dados && (dados.erro || dados.message)) {
+          return dados.erro || dados.message;
+        }
+        return fallback;
+      }
+
+      function lerJson(resposta) {
+        return resposta.json()
+          .then(function (dados) {
+            return { ok: resposta.ok, dados: dados };
+          })
+          .catch(function () {
+            return { ok: resposta.ok, dados: null };
+          });
+      }
+
+      function rotuloLocalizacao(linha) {
+        if (linha.localizacaoId == null && linha.localizacaoCodigo == null) {
+          return '(sem localização)';
+        }
+        var codigo = linha.localizacaoCodigo == null ? '' : String(linha.localizacaoCodigo);
+        var descricao = linha.localizacaoDescricao == null ? '' : String(linha.localizacaoDescricao);
+        if (codigo === '' && descricao === '') {
+          return '(sem localização)';
+        }
+        if (descricao === '') {
+          return codigo;
+        }
+        if (codigo === '') {
+          return descricao;
+        }
+        return codigo + ' — ' + descricao;
+      }
+
+      function rotuloProduto(linha) {
+        var sku = linha.produtoSku == null ? '' : String(linha.produtoSku);
+        var nome = linha.produtoNome == null ? '' : String(linha.produtoNome);
+        if (sku === '' && nome === '') {
+          var id = linha.produtoId == null ? '' : String(linha.produtoId);
+          return id === '' ? '(desconhecido)' : id;
+        }
+        if (nome === '') {
+          return sku;
+        }
+        if (sku === '') {
+          return nome;
+        }
+        return sku + ' — ' + nome;
+      }
+
+      function chaveLocalizacao(linha) {
+        if (linha.localizacaoId == null && linha.localizacaoCodigo == null) {
+          return ' sem-localizacao';
+        }
+        return rotuloLocalizacao(linha);
+      }
+
+      function adicionarLinhaDados(localizacaoTexto, produtoTexto, quantidade) {
+        var tr = document.createElement('tr');
+
+        var tdLoc = document.createElement('td');
+        tdLoc.textContent = localizacaoTexto;
+
+        var tdProd = document.createElement('td');
+        tdProd.textContent = produtoTexto;
+
+        var tdQtd = document.createElement('td');
+        tdQtd.className = 'qtd';
+        tdQtd.textContent = String(quantidade);
+
+        tr.appendChild(tdLoc);
+        tr.appendChild(tdProd);
+        tr.appendChild(tdQtd);
+        corpoTabela.appendChild(tr);
+      }
+
+      function adicionarLinhaSubtotal(localizacaoTexto, quantidade) {
+        var tr = document.createElement('tr');
+        tr.className = 'linha-subtotal';
+
+        var tdRotulo = document.createElement('td');
+        tdRotulo.colSpan = 2;
+        tdRotulo.textContent = 'Subtotal — ' + localizacaoTexto;
+
+        var tdQtd = document.createElement('td');
+        tdQtd.className = 'qtd';
+        tdQtd.textContent = String(quantidade);
+
+        tr.appendChild(tdRotulo);
+        tr.appendChild(tdQtd);
+        corpoTabela.appendChild(tr);
+      }
+
+      function adicionarLinhaTotalGeral(quantidade) {
+        var tr = document.createElement('tr');
+        tr.className = 'linha-total';
+
+        var tdRotulo = document.createElement('td');
+        tdRotulo.colSpan = 2;
+        tdRotulo.textContent = 'Total geral';
+
+        var tdQtd = document.createElement('td');
+        tdQtd.className = 'qtd';
+        tdQtd.textContent = String(quantidade);
+
+        tr.appendChild(tdRotulo);
+        tr.appendChild(tdQtd);
+        corpoTabela.appendChild(tr);
+      }
+
+      function renderizar() {
+        corpoTabela.innerHTML = '';
+
+        var termo = campoBusca.value.trim().toLowerCase();
+        var visiveis = estoqueAtual.filter(function (linha) {
+          if (termo === '') {
+            return true;
+          }
+          var alvoProduto = rotuloProduto(linha).toLowerCase();
+          var alvoLocalizacao = rotuloLocalizacao(linha).toLowerCase();
+          return alvoProduto.indexOf(termo) !== -1 || alvoLocalizacao.indexOf(termo) !== -1;
+        });
+
+        if (estoqueAtual.length === 0) {
+          listaVazia.hidden = false;
+          listaVazia.textContent = 'Nenhum item em estoque.';
+          contadorRegistros.hidden = true;
+          return;
+        }
+
+        if (visiveis.length === 0) {
+          listaVazia.hidden = false;
+          listaVazia.textContent = 'Nenhum item corresponde ao filtro informado.';
+          contadorRegistros.hidden = true;
+          return;
+        }
+
+        listaVazia.hidden = true;
+
+        var chaveGrupoAtual = null;
+        var rotuloGrupoAtual = '';
+        var subtotalGrupo = 0;
+        var totalVisivel = 0;
+
+        visiveis.forEach(function (linha) {
+          var chave = chaveLocalizacao(linha);
+          if (chaveGrupoAtual !== null && chave !== chaveGrupoAtual) {
+            adicionarLinhaSubtotal(rotuloGrupoAtual, subtotalGrupo);
+            subtotalGrupo = 0;
+          }
+          if (chave !== chaveGrupoAtual) {
+            chaveGrupoAtual = chave;
+            rotuloGrupoAtual = rotuloLocalizacao(linha);
+          }
+
+          var quantidade = typeof linha.quantidade === 'number' ? linha.quantidade : 0;
+          adicionarLinhaDados(rotuloLocalizacao(linha), rotuloProduto(linha), quantidade);
+          subtotalGrupo += quantidade;
+          totalVisivel += quantidade;
+        });
+
+        if (chaveGrupoAtual !== null) {
+          adicionarLinhaSubtotal(rotuloGrupoAtual, subtotalGrupo);
+        }
+
+        var totalExibido = termo === '' ? totalGeralAtual : totalVisivel;
+        adicionarLinhaTotalGeral(totalExibido);
+
+        contadorRegistros.hidden = false;
+        if (termo === '') {
+          contadorRegistros.textContent = 'Registros: ' + visiveis.length;
+        } else {
+          contadorRegistros.textContent =
+            'Registros: ' + visiveis.length + ' de ' + estoqueAtual.length;
+        }
+      }
+
+      function carregarEstoque() {
+        corpoTabela.innerHTML = '';
+        listaVazia.hidden = true;
+        contadorRegistros.hidden = true;
+        botaoAtualizar.disabled = true;
+        botaoAtualizar.textContent = 'Atualizando...';
+
+        return fetch('/api/estoque')
+          .then(lerJson)
+          .then(function (resultado) {
+            if (!resultado.ok || !resultado.dados || !Array.isArray(resultado.dados.itens)) {
+              estoqueAtual = [];
+              totalGeralAtual = 0;
+              listaVazia.hidden = false;
+              listaVazia.textContent = mensagemErroDaResposta(
+                resultado.dados, 'Não foi possível carregar o estoque.'
+              );
+              return;
+            }
+
+            estoqueAtual = resultado.dados.itens;
+            totalGeralAtual = typeof resultado.dados.quantidadeTotalGeral === 'number'
+              ? resultado.dados.quantidadeTotalGeral
+              : 0;
+            limparMensagem();
+            renderizar();
+          })
+          .catch(function () {
+            estoqueAtual = [];
+            totalGeralAtual = 0;
+            listaVazia.hidden = false;
+            listaVazia.textContent = 'Falha de conexão ao carregar o estoque.';
+          })
+          .finally(function () {
+            botaoAtualizar.disabled = false;
+            botaoAtualizar.textContent = 'Atualizar';
+          });
+      }
+
+      campoBusca.addEventListener('input', function () {
+        renderizar();
+      });
+
+      botaoAtualizar.addEventListener('click', function () {
+        limparMensagem();
+        carregarEstoque();
+      });
+
+      carregarEstoque();
+    })();
+  </script>
+</body>
+</html>

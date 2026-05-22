@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2e7d32" />
+  <title>WMS — Armazenagem</title>
+  <style>
+    :root {
+      --verde-escuro: #2e7d32;
+      --verde-escuro-hover: #1b5e20;
+      --verde-claro: #4caf50;
+      --branco: #ffffff;
+      --cinza-borda: #cfd8dc;
+      --cinza-texto: #5f6b6d;
+      --texto-escuro: #1c2526;
+      --erro-bg: #fdecea;
+      --erro-borda: #f5c6cb;
+      --erro-texto: #b71c1c;
+      --sucesso-bg: #e8f5e9;
+      --sucesso-borda: #a5d6a7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--branco);
+      color: var(--texto-escuro);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: var(--branco);
+      width: 100%;
+      max-width: 480px;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(27, 94, 32, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .card__header {
+      background: linear-gradient(135deg, var(--verde-escuro), var(--verde-claro));
+      color: var(--branco);
+      padding: 2rem 1.75rem 1.75rem;
+      text-align: center;
+    }
+
+    .card__logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.85rem;
+      display: block;
+    }
+
+    .card__title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .card__subtitle {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+
+    .card__body {
+      padding: 1.75rem;
+    }
+
+    .barra-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .barra-topo__usuario {
+      font-size: 0.9rem;
+      color: var(--cinza-texto);
+    }
+
+    .barra-topo__acoes {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .campo {
+      margin-bottom: 1.15rem;
+    }
+
+    .campo__label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--texto-escuro);
+      margin-bottom: 0.4rem;
+    }
+
+    .campo__obrigatorio {
+      color: var(--erro-texto);
+    }
+
+    .campo__input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      font-size: 1rem;
+      color: var(--texto-escuro);
+      border: 1.5px solid var(--cinza-borda);
+      border-radius: 8px;
+      background: var(--branco);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+    }
+
+    select.campo__input {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'%235f6b6d'%20stroke-width%3D'2'%3E%3Cpath%20d%3D'M6%209l6%206%206-6'%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.7rem center;
+      background-size: 1rem;
+      padding-right: 2.2rem;
+    }
+
+    .campo__input:focus {
+      outline: none;
+      border-color: var(--verde-claro);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.22);
+    }
+
+    .campo__input:disabled {
+      background: #f4f6f6;
+      color: #9aa5a6;
+      cursor: not-allowed;
+    }
+
+    .campo__ajuda {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--cinza-texto);
+    }
+
+    .botao {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--branco);
+      background: var(--verde-escuro);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+
+    .botao:hover {
+      background: var(--verde-escuro-hover);
+    }
+
+    .botao:active {
+      transform: translateY(1px);
+    }
+
+    .botao:disabled {
+      background: #9aa5a6;
+      cursor: progress;
+    }
+
+    .botao--secundario {
+      width: auto;
+      background: var(--branco);
+      color: var(--verde-escuro);
+      border: 1.5px solid var(--cinza-borda);
+    }
+
+    .botao--secundario:hover {
+      background: #f4f6f6;
+      color: var(--verde-escuro-hover);
+    }
+
+    .botao--pequeno {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+    }
+
+    .mensagem {
+      margin-bottom: 1.1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1.5px solid transparent;
+      display: none;
+    }
+
+    .mensagem--erro {
+      display: block;
+      background: var(--erro-bg);
+      border-color: var(--erro-borda);
+      color: var(--erro-texto);
+    }
+
+    .mensagem--sucesso {
+      display: block;
+      background: var(--sucesso-bg);
+      border-color: var(--sucesso-borda);
+      color: var(--verde-escuro-hover);
+    }
+
+    .mensagem--sucesso strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .rodape {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+    }
+
+    .rodape a {
+      color: var(--verde-escuro);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .rodape a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .card__header { padding: 1.5rem 1.25rem; }
+      .card__body { padding: 1.5rem 1.25rem; }
+      .card__title { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <header class="card__header">
+      <svg class="card__logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="m3 7.5 9 4.5 9-4.5M12 12v9" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M7.5 5.25 16.5 9.75" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+      <h1 class="card__title">WMS — Armazenagem</h1>
+      <p class="card__subtitle">Armazenar item recebido em uma localização</p>
+    </header>
+
+    <div class="card__body">
+      <div class="barra-topo">
+        <span class="barra-topo__usuario" id="barraUsuario"></span>
+        <span class="barra-topo__acoes">
+          <a class="botao botao--secundario botao--pequeno" href="menu.html">Menu</a>
+          <button class="botao botao--secundario botao--pequeno" type="button" id="botaoSair">Sair</button>
+        </span>
+      </div>
+
+      <div id="mensagem" class="mensagem" role="alert" aria-live="polite"></div>
+
+      <form id="formArmazenagem" novalidate>
+        <div class="campo">
+          <label class="campo__label" for="estoqueItemId">ID do item de estoque <span class="campo__obrigatorio" aria-hidden="true">*</span></label>
+          <input class="campo__input" type="text" id="estoqueItemId" autocomplete="off" placeholder="Cole o ID gerado no recebimento" required />
+          <p class="campo__ajuda">Gerado ao dar entrada no Recebimento.</p>
+        </div>
+
+        <div class="campo">
+          <label class="campo__label" for="localizacao">Localização <span class="campo__obrigatorio" aria-hidden="true">*</span></label>
+          <select class="campo__input" id="localizacao" required>
+            <option value="">Carregando localizações...</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label class="campo__label" for="usuario">Usuário responsável <span class="campo__obrigatorio" aria-hidden="true">*</span></label>
+          <select class="campo__input" id="usuario" required>
+            <option value="">Carregando usuários...</option>
+          </select>
+        </div>
+
+        <button class="botao" type="submit" id="botaoArmazenar">Armazenar item</button>
+      </form>
+
+      <p class="rodape">
+        <a href="/status">Ver status do serviço</a>
+      </p>
+    </div>
+  </main>
+
+  <script src="sessao.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var usuario = exigirSessao();
+      if (!usuario) {
+        throw new Error('sem sessão');
+      }
+
+      function escaparHtml(texto) {
+        var div = document.createElement('div');
+        div.textContent = texto == null ? '' : String(texto);
+        return div.innerHTML;
+      }
+
+      var caixaMensagem = document.getElementById('mensagem');
+      var form = document.getElementById('formArmazenagem');
+      var campoEstoqueItemId = document.getElementById('estoqueItemId');
+      var selLocalizacao = document.getElementById('localizacao');
+      var selUsuario = document.getElementById('usuario');
+      var botaoArmazenar = document.getElementById('botaoArmazenar');
+
+      document.getElementById('barraUsuario').innerHTML =
+        escaparHtml(usuario.nome) + ' (' + escaparHtml(usuario.perfil) + ')';
+      document.getElementById('botaoSair').addEventListener('click', function () {
+        sair();
+      });
+
+      var idDaQuery = new URLSearchParams(location.search).get('estoqueItemId');
+      if (idDaQuery) {
+        campoEstoqueItemId.value = idDaQuery;
+      }
+
+      function exibirMensagem(tipo, htmlConteudo) {
+        caixaMensagem.className = 'mensagem mensagem--' + tipo;
+        caixaMensagem.innerHTML = htmlConteudo;
+      }
+
+      function limparMensagem() {
+        caixaMensagem.className = 'mensagem';
+        caixaMensagem.innerHTML = '';
+      }
+
+      function mensagemErroDaResposta(dados, fallback) {
+        if (dados && (dados.erro || dados.message)) {
+          return dados.erro || dados.message;
+        }
+        return fallback;
+      }
+
+      function lerJson(resposta) {
+        return resposta.json()
+          .then(function (dados) {
+            return { ok: resposta.ok, dados: dados };
+          })
+          .catch(function () {
+            return { ok: resposta.ok, dados: null };
+          });
+      }
+
+      function adicionarOpcao(select, valor, rotulo) {
+        var opt = document.createElement('option');
+        opt.value = valor;
+        opt.textContent = rotulo;
+        select.appendChild(opt);
+      }
+
+      function carregarLocalizacoes() {
+        return fetch('/api/localizacoes')
+          .then(lerJson)
+          .then(function (resultado) {
+            selLocalizacao.innerHTML = '';
+            if (!resultado.ok || !Array.isArray(resultado.dados)) {
+              adicionarOpcao(selLocalizacao, '', 'Erro ao carregar localizações');
+              throw new Error('localizacoes');
+            }
+            if (resultado.dados.length === 0) {
+              adicionarOpcao(selLocalizacao, '', 'Nenhuma localização disponível');
+              return;
+            }
+            adicionarOpcao(selLocalizacao, '', 'Selecione uma localização');
+            resultado.dados.forEach(function (l) {
+              var rotulo = l.descricao
+                ? String(l.codigo) + ' — ' + String(l.descricao)
+                : String(l.codigo);
+              adicionarOpcao(selLocalizacao, l.id, rotulo);
+            });
+          });
+      }
+
+      function carregarUsuarios() {
+        return fetch('/api/usuarios')
+          .then(lerJson)
+          .then(function (resultado) {
+            selUsuario.innerHTML = '';
+            if (!resultado.ok || !Array.isArray(resultado.dados)) {
+              adicionarOpcao(selUsuario, '', 'Erro ao carregar usuários');
+              throw new Error('usuarios');
+            }
+            adicionarOpcao(selUsuario, '', 'Selecione um usuário');
+            resultado.dados.forEach(function (u) {
+              adicionarOpcao(selUsuario, u.id, String(u.nome));
+            });
+          });
+      }
+
+      Promise.all([
+        carregarLocalizacoes().catch(function () { /* erro já refletido no select */ }),
+        carregarUsuarios().catch(function () { /* erro já refletido no select */ })
+      ]).catch(function () {
+        exibirMensagem('erro', 'Falha de conexão ao carregar os dados. Recarregue a página.');
+      });
+
+      form.addEventListener('submit', function (evento) {
+        evento.preventDefault();
+        limparMensagem();
+
+        var estoqueItemId = campoEstoqueItemId.value.trim();
+        var localizacaoId = selLocalizacao.value;
+        var usuarioId = selUsuario.value;
+
+        if (estoqueItemId === '') {
+          exibirMensagem('erro', 'Informe o ID do item de estoque.');
+          campoEstoqueItemId.focus();
+          return;
+        }
+        if (localizacaoId === '') {
+          exibirMensagem('erro', 'Selecione a localização de destino.');
+          selLocalizacao.focus();
+          return;
+        }
+        if (usuarioId === '') {
+          exibirMensagem('erro', 'Selecione o usuário responsável.');
+          selUsuario.focus();
+          return;
+        }
+
+        var corpo = {
+          estoqueItemId: estoqueItemId,
+          localizacaoId: localizacaoId,
+          usuarioId: usuarioId
+        };
+
+        botaoArmazenar.disabled = true;
+        botaoArmazenar.textContent = 'Enviando...';
+
+        fetch('/api/armazenagens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(corpo)
+        })
+          .then(lerJson)
+          .then(function (resultado) {
+            if (!resultado.ok) {
+              exibirMensagem('erro', escaparHtml(
+                mensagemErroDaResposta(resultado.dados, 'Não foi possível armazenar o item.')
+              ));
+              return;
+            }
+            var mov = resultado.dados || {};
+            exibirMensagem('sucesso',
+              '<strong>Item armazenado</strong>' +
+              'Movimentação de armazenagem registrada' +
+              (mov.id ? ' (ID ' + escaparHtml(mov.id) + ')' : '') + '.'
+            );
+            form.reset();
+            campoEstoqueItemId.value = '';
+          })
+          .catch(function () {
+            exibirMensagem('erro', 'Falha de conexão com o servidor. Verifique sua rede e tente novamente.');
+          })
+          .finally(function () {
+            botaoArmazenar.disabled = false;
+            botaoArmazenar.textContent = 'Armazenar item';
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

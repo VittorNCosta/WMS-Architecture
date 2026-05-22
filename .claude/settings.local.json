@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"TYPECHECK_EXIT=$?\")",
+      "Bash(npx vitest *)",
+      "PowerShell(npm run typecheck)",
+      "PowerShell(npm test)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\vitto\\\\Área de Trabalho\\\\Arquitetura - Trabalho WMS\" -Filter \"*.md\" -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Recurse -Path \"c:\\\\Users\\\\vitto\\\\Área de Trabalho\\\\Arquitetura - Trabalho WMS\" -Filter \"*.md\" -Exclude node_modules)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(npm start *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\vitto\\\\Área de Trabalho\\\\Arquitetura - Trabalho WMS\" -Recurse -Include \"*.ts\", \"*.json\", \"*.html\")",
+      "Bash(Select-Object -First 50 FullName)",
+      "PowerShell($env:PORT='3333'; npm start)",
+      "PowerShell($conns = Get-NetTCPConnection -LocalPort 3333 -State Listen -ErrorAction SilentlyContinue; if \\($conns\\) { $conns | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; [PSCustomObject]@{ PID=$_.OwningProcess; Name=$p.Name; Path=$p.Path; Started=$p.StartTime } } | Format-List } else { 'Nada escutando na porta 3333' })",
+      "PowerShell(Stop-Process -Id 3992 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 800; $still = Get-NetTCPConnection -LocalPort 3333 -State Listen -ErrorAction SilentlyContinue; if \\($still\\) { 'Porta 3333 AINDA ocupada por PID ' + \\($still.OwningProcess -join ','\\) } else { 'Porta 3333 liberada' })",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:3333/status)",
+      "PowerShell($conns = Get-NetTCPConnection -LocalPort 3333 -State Listen -ErrorAction SilentlyContinue; if \\($conns\\) { $conns | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } }; Start-Sleep -Milliseconds 700; $still = Get-NetTCPConnection -LocalPort 3333 -State Listen -ErrorAction SilentlyContinue; if \\($still\\) { 'AINDA escutando: PID ' + \\($still.OwningProcess -join ','\\) } else { 'Servidor encerrado — porta 3333 livre' })",
+      "Bash(dir /B src)"
+    ]
+  }
+}

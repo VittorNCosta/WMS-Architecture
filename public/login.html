@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2e7d32" />
+  <title>WMS — Acesso ao Sistema</title>
+  <style>
+    :root {
+      --verde-escuro: #2e7d32;
+      --verde-escuro-hover: #1b5e20;
+      --verde-claro: #4caf50;
+      --branco: #ffffff;
+      --cinza-borda: #cfd8dc;
+      --cinza-texto: #5f6b6d;
+      --texto-escuro: #1c2526;
+      --erro-bg: #fdecea;
+      --erro-borda: #f5c6cb;
+      --erro-texto: #b71c1c;
+      --sucesso-bg: #e8f5e9;
+      --sucesso-borda: #a5d6a7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--branco);
+      color: var(--texto-escuro);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: var(--branco);
+      width: 100%;
+      max-width: 420px;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(27, 94, 32, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .card__header {
+      background: linear-gradient(135deg, var(--verde-escuro), var(--verde-claro));
+      color: var(--branco);
+      padding: 2rem 1.75rem 1.75rem;
+      text-align: center;
+    }
+
+    .card__logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.85rem;
+      display: block;
+    }
+
+    .card__title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .card__subtitle {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+
+    .card__body {
+      padding: 1.75rem;
+    }
+
+    .campo {
+      margin-bottom: 1.15rem;
+    }
+
+    .campo__label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--texto-escuro);
+      margin-bottom: 0.4rem;
+    }
+
+    .campo__input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      font-size: 1rem;
+      color: var(--texto-escuro);
+      border: 1.5px solid var(--cinza-borda);
+      border-radius: 8px;
+      background: var(--branco);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .campo__input:focus {
+      outline: none;
+      border-color: var(--verde-claro);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.22);
+    }
+
+    .campo__input:disabled {
+      background: #f4f6f6;
+      color: #9aa5a6;
+      cursor: not-allowed;
+    }
+
+    .campo__ajuda {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--cinza-texto);
+    }
+
+    .botao {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--branco);
+      background: var(--verde-escuro);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+
+    .botao:hover {
+      background: var(--verde-escuro-hover);
+    }
+
+    .botao:active {
+      transform: translateY(1px);
+    }
+
+    .botao:disabled {
+      background: #9aa5a6;
+      cursor: progress;
+    }
+
+    .mensagem {
+      margin-bottom: 1.1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1.5px solid transparent;
+      display: none;
+    }
+
+    .mensagem--erro {
+      display: block;
+      background: var(--erro-bg);
+      border-color: var(--erro-borda);
+      color: var(--erro-texto);
+    }
+
+    .mensagem--sucesso {
+      display: block;
+      background: var(--sucesso-bg);
+      border-color: var(--sucesso-borda);
+      color: var(--verde-escuro-hover);
+    }
+
+    .mensagem--sucesso strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .rodape {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+    }
+
+    .rodape a {
+      color: var(--verde-escuro);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .rodape a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .card__header { padding: 1.5rem 1.25rem; }
+      .card__body { padding: 1.5rem 1.25rem; }
+      .card__title { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <header class="card__header">
+      <svg class="card__logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="m3 7.5 9 4.5 9-4.5M12 12v9" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M7.5 5.25 16.5 9.75" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+      <h1 class="card__title">WMS — Acesso ao Sistema</h1>
+      <p class="card__subtitle">Gestão de Estoque e Movimentações</p>
+    </header>
+
+    <div class="card__body">
+      <div id="mensagem" class="mensagem" role="alert" aria-live="polite"></div>
+
+      <form id="formLogin" novalidate>
+        <div class="campo">
+          <label class="campo__label" for="login">Login</label>
+          <input
+            class="campo__input"
+            type="text"
+            id="login"
+            name="login"
+            autocomplete="username"
+            placeholder="Use: admin ou operador"
+            autofocus
+          />
+          <p class="campo__ajuda">Usuários de teste disponíveis: <strong>admin</strong> ou <strong>operador</strong>.</p>
+        </div>
+
+        <div class="campo">
+          <label class="campo__label" for="senha">Senha</label>
+          <input
+            class="campo__input"
+            type="password"
+            id="senha"
+            name="senha"
+            placeholder="Não utilizada neste sistema"
+            disabled
+          />
+          <p class="campo__ajuda">Este sistema autentica somente pelo login (sem senha).</p>
+        </div>
+
+        <button class="botao" type="submit" id="botaoEntrar">Entrar</button>
+      </form>
+
+      <p class="rodape">
+        <a href="/status">Ver status do serviço</a>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var form = document.getElementById('formLogin');
+      var campoLogin = document.getElementById('login');
+      var caixaMensagem = document.getElementById('mensagem');
+      var botaoEntrar = document.getElementById('botaoEntrar');
+
+      function exibirMensagem(tipo, htmlConteudo) {
+        caixaMensagem.className = 'mensagem mensagem--' + tipo;
+        caixaMensagem.innerHTML = htmlConteudo;
+      }
+
+      function limparMensagem() {
+        caixaMensagem.className = 'mensagem';
+        caixaMensagem.innerHTML = '';
+      }
+
+      function escaparHtml(texto) {
+        var div = document.createElement('div');
+        div.textContent = texto == null ? '' : String(texto);
+        return div.innerHTML;
+      }
+
+      form.addEventListener('submit', function (evento) {
+        evento.preventDefault();
+        limparMensagem();
+
+        var login = campoLogin.value.trim();
+        if (login === '') {
+          exibirMensagem('erro', 'Informe o login para continuar.');
+          campoLogin.focus();
+          return;
+        }
+
+        botaoEntrar.disabled = true;
+        botaoEntrar.textContent = 'Entrando...';
+
+        fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: login })
+        })
+          .then(function (resposta) {
+            return resposta.json().then(function (dados) {
+              return { ok: resposta.ok, dados: dados };
+            });
+          })
+          .then(function (resultado) {
+            if (!resultado.ok) {
+              var msgErro = (resultado.dados && (resultado.dados.erro || resultado.dados.message))
+                || 'Não foi possível autenticar. Tente novamente.';
+              exibirMensagem('erro', escaparHtml(msgErro));
+              return;
+            }
+
+            var u = resultado.dados;
+            exibirMensagem(
+              'sucesso',
+              '<strong>Bem-vindo, ' + escaparHtml(u.nome) + ' (' + escaparHtml(u.perfil) + ')</strong>' +
+              'Acesso liberado ao WMS. Redirecionando...'
+            );
+            form.reset();
+            sessionStorage.setItem('wms_usuario', JSON.stringify(u));
+            window.location.href = 'menu.html';
+            return;
+          })
+          .catch(function () {
+            exibirMensagem('erro', 'Falha de conexão com o servidor. Verifique sua rede e tente novamente.');
+          })
+          .finally(function () {
+            botaoEntrar.disabled = false;
+            botaoEntrar.textContent = 'Entrar';
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

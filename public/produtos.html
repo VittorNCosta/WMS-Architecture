@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2e7d32" />
+  <title>WMS — Produtos</title>
+  <style>
+    :root {
+      --verde-escuro: #2e7d32;
+      --verde-escuro-hover: #1b5e20;
+      --verde-claro: #4caf50;
+      --branco: #ffffff;
+      --cinza-borda: #cfd8dc;
+      --cinza-texto: #5f6b6d;
+      --texto-escuro: #1c2526;
+      --erro-bg: #fdecea;
+      --erro-borda: #f5c6cb;
+      --erro-texto: #b71c1c;
+      --sucesso-bg: #e8f5e9;
+      --sucesso-borda: #a5d6a7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--branco);
+      color: var(--texto-escuro);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: var(--branco);
+      width: 100%;
+      max-width: 900px;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(27, 94, 32, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .card__header {
+      background: linear-gradient(135deg, var(--verde-escuro), var(--verde-claro));
+      color: var(--branco);
+      padding: 2rem 1.75rem 1.75rem;
+      text-align: center;
+    }
+
+    .card__logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.85rem;
+      display: block;
+    }
+
+    .card__title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .card__subtitle {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+
+    .card__body {
+      padding: 1.75rem;
+    }
+
+    .barra-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .barra-topo__usuario {
+      font-size: 0.9rem;
+      color: var(--cinza-texto);
+    }
+
+    .barra-topo__acoes {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .secao {
+      border: 1.5px solid var(--cinza-borda);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .secao__titulo {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--verde-escuro);
+      margin-bottom: 1rem;
+    }
+
+    .campo {
+      margin-bottom: 1.15rem;
+    }
+
+    .campo__label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--texto-escuro);
+      margin-bottom: 0.4rem;
+    }
+
+    .campo__obrigatorio {
+      color: var(--erro-texto);
+    }
+
+    .campo__input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      font-size: 1rem;
+      color: var(--texto-escuro);
+      border: 1.5px solid var(--cinza-borda);
+      border-radius: 8px;
+      background: var(--branco);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+    }
+
+    .campo__input:focus {
+      outline: none;
+      border-color: var(--verde-claro);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.22);
+    }
+
+    .campo__input:disabled {
+      background: #f4f6f6;
+      color: #9aa5a6;
+      cursor: not-allowed;
+    }
+
+    .campo--checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .campo--checkbox input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--verde-escuro);
+    }
+
+    .campo--checkbox .campo__label {
+      margin-bottom: 0;
+    }
+
+    .campo__ajuda {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--cinza-texto);
+    }
+
+    .botao {
+      padding: 0.8rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--branco);
+      background: var(--verde-escuro);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+
+    .botao:hover {
+      background: var(--verde-escuro-hover);
+    }
+
+    .botao:active {
+      transform: translateY(1px);
+    }
+
+    .botao:disabled {
+      background: #9aa5a6;
+      cursor: progress;
+    }
+
+    .botao--secundario {
+      background: var(--branco);
+      color: var(--verde-escuro);
+      border: 1.5px solid var(--cinza-borda);
+    }
+
+    .botao--secundario:hover {
+      background: #f4f6f6;
+      color: var(--verde-escuro-hover);
+    }
+
+    .botao--pequeno {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+    }
+
+    .mensagem {
+      margin-bottom: 1.1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1.5px solid transparent;
+      display: none;
+    }
+
+    .mensagem--erro {
+      display: block;
+      background: var(--erro-bg);
+      border-color: var(--erro-borda);
+      color: var(--erro-texto);
+    }
+
+    .mensagem--sucesso {
+      display: block;
+      background: var(--sucesso-bg);
+      border-color: var(--sucesso-borda);
+      color: var(--verde-escuro-hover);
+    }
+
+    .mensagem--sucesso strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .tabela-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--cinza-borda);
+    }
+
+    th {
+      background: #f4f6f6;
+      color: var(--cinza-texto);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    td .selo {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .selo--ativo {
+      background: var(--sucesso-bg);
+      color: var(--verde-escuro-hover);
+      border: 1px solid var(--sucesso-borda);
+    }
+
+    .selo--inativo {
+      background: var(--erro-bg);
+      color: var(--erro-texto);
+      border: 1px solid var(--erro-borda);
+    }
+
+    .vazio {
+      padding: 1rem;
+      text-align: center;
+      color: var(--cinza-texto);
+      font-size: 0.9rem;
+    }
+
+    .rodape {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+    }
+
+    .rodape a {
+      color: var(--verde-escuro);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .rodape a:hover {
+      text-decoration: underline;
+    }
+
+    #secaoAtualizar {
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .card__header { padding: 1.5rem 1.25rem; }
+      .card__body { padding: 1.5rem 1.25rem; }
+      .card__title { font-size: 1.2rem; }
+      .secao { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <header class="card__header">
+      <svg class="card__logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="m3 7.5 9 4.5 9-4.5M12 12v9" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M7.5 5.25 16.5 9.75" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+      <h1 class="card__title">WMS — Produtos</h1>
+      <p class="card__subtitle">Cadastro, consulta e atualização</p>
+    </header>
+
+    <div class="card__body">
+      <div class="barra-topo">
+        <span class="barra-topo__usuario" id="barraUsuario"></span>
+        <span class="barra-topo__acoes">
+          <a class="botao botao--secundario botao--pequeno" href="menu.html">Menu</a>
+          <button class="botao botao--secundario botao--pequeno" type="button" id="botaoSair">Sair</button>
+        </span>
+      </div>
+
+      <div id="mensagem" class="mensagem" role="alert" aria-live="polite"></div>
+
+      <!-- Cadastrar -->
+      <section class="secao" aria-labelledby="tituloCadastrar">
+        <h2 class="secao__titulo" id="tituloCadastrar">Cadastrar produto</h2>
+        <form id="formCadastrar" novalidate>
+          <div class="campo">
+            <label class="campo__label" for="novoSku">SKU <span class="campo__obrigatorio" aria-hidden="true">*</span></label>
+            <input class="campo__input" type="text" id="novoSku" name="sku" autocomplete="off" required />
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="novoNome">Nome <span class="campo__obrigatorio" aria-hidden="true">*</span></label>
+            <input class="campo__input" type="text" id="novoNome" name="nome" autocomplete="off" required />
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="novaDescricao">Descrição</label>
+            <input class="campo__input" type="text" id="novaDescricao" name="descricao" autocomplete="off" />
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="novaUnidade">Unidade de medida <span class="campo__obrigatorio" aria-hidden="true">*</span></label>
+            <input class="campo__input" type="text" id="novaUnidade" name="unidadeMedida" placeholder="Ex.: UN, CX, KG" autocomplete="off" required />
+          </div>
+          <button class="botao" type="submit" id="botaoCadastrar">Cadastrar</button>
+        </form>
+      </section>
+
+      <!-- Atualizar -->
+      <section class="secao" id="secaoAtualizar" aria-labelledby="tituloAtualizar">
+        <h2 class="secao__titulo" id="tituloAtualizar">Atualizar produto</h2>
+        <form id="formAtualizar" novalidate>
+          <div class="campo">
+            <label class="campo__label" for="editSku">SKU</label>
+            <input class="campo__input" type="text" id="editSku" disabled />
+            <p class="campo__ajuda">O SKU não pode ser alterado.</p>
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="editNome">Nome <span class="campo__obrigatorio" aria-hidden="true">*</span></label>
+            <input class="campo__input" type="text" id="editNome" autocomplete="off" required />
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="editDescricao">Descrição</label>
+            <input class="campo__input" type="text" id="editDescricao" autocomplete="off" />
+          </div>
+          <div class="campo">
+            <label class="campo__label" for="editUnidade">Unidade de medida <span class="campo__obrigatorio" aria-hidden="true">*</span></label>
+            <input class="campo__input" type="text" id="editUnidade" autocomplete="off" required />
+          </div>
+          <div class="campo campo--checkbox">
+            <input type="checkbox" id="editAtivo" />
+            <label class="campo__label" for="editAtivo">Produto ativo</label>
+          </div>
+          <button class="botao" type="submit" id="botaoAtualizar">Salvar alterações</button>
+          <button class="botao botao--secundario" type="button" id="botaoCancelarEdicao">Cancelar</button>
+        </form>
+      </section>
+
+      <!-- Listar -->
+      <section class="secao" aria-labelledby="tituloListar">
+        <h2 class="secao__titulo" id="tituloListar">Produtos cadastrados</h2>
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">SKU</th>
+                <th scope="col">Nome</th>
+                <th scope="col">Un. medida</th>
+                <th scope="col">Situação</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="corpoTabela"></tbody>
+          </table>
+        </div>
+        <div id="listaVazia" class="vazio" hidden>Nenhum produto cadastrado ainda.</div>
+      </section>
+
+      <p class="rodape">
+        <a href="/status">Ver status do serviço</a>
+      </p>
+    </div>
+  </main>
+
+  <script src="sessao.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var usuario = exigirSessao();
+      if (!usuario) {
+        throw new Error('sem sessão');
+      }
+
+      function escaparHtml(texto) {
+        var div = document.createElement('div');
+        div.textContent = texto == null ? '' : String(texto);
+        return div.innerHTML;
+      }
+
+      var caixaMensagem = document.getElementById('mensagem');
+      var corpoTabela = document.getElementById('corpoTabela');
+      var listaVazia = document.getElementById('listaVazia');
+      var secaoAtualizar = document.getElementById('secaoAtualizar');
+
+      var formCadastrar = document.getElementById('formCadastrar');
+      var botaoCadastrar = document.getElementById('botaoCadastrar');
+      var novoSku = document.getElementById('novoSku');
+      var novoNome = document.getElementById('novoNome');
+      var novaDescricao = document.getElementById('novaDescricao');
+      var novaUnidade = document.getElementById('novaUnidade');
+
+      var formAtualizar = document.getElementById('formAtualizar');
+      var botaoAtualizar = document.getElementById('botaoAtualizar');
+      var botaoCancelarEdicao = document.getElementById('botaoCancelarEdicao');
+      var editSku = document.getElementById('editSku');
+      var editNome = document.getElementById('editNome');
+      var editDescricao = document.getElementById('editDescricao');
+      var editUnidade = document.getElementById('editUnidade');
+      var editAtivo = document.getElementById('editAtivo');
+
+      var produtoEmEdicaoId = null;
+
+      document.getElementById('barraUsuario').innerHTML =
+        escaparHtml(usuario.nome) + ' (' + escaparHtml(usuario.perfil) + ')';
+      document.getElementById('botaoSair').addEventListener('click', function () {
+        sair();
+      });
+
+      function exibirMensagem(tipo, htmlConteudo) {
+        caixaMensagem.className = 'mensagem mensagem--' + tipo;
+        caixaMensagem.innerHTML = htmlConteudo;
+        caixaMensagem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function limparMensagem() {
+        caixaMensagem.className = 'mensagem';
+        caixaMensagem.innerHTML = '';
+      }
+
+      function mensagemErroDaResposta(dados, fallback) {
+        if (dados && (dados.erro || dados.message)) {
+          return dados.erro || dados.message;
+        }
+        return fallback;
+      }
+
+      function lerJson(resposta) {
+        return resposta.json()
+          .then(function (dados) {
+            return { ok: resposta.ok, dados: dados };
+          })
+          .catch(function () {
+            return { ok: resposta.ok, dados: null };
+          });
+      }
+
+      function carregarLista() {
+        corpoTabela.innerHTML = '';
+        listaVazia.hidden = true;
+
+        return fetch('/api/produtos')
+          .then(lerJson)
+          .then(function (resultado) {
+            if (!resultado.ok || !Array.isArray(resultado.dados)) {
+              listaVazia.hidden = false;
+              listaVazia.textContent = mensagemErroDaResposta(
+                resultado.dados, 'Não foi possível carregar a lista de produtos.'
+              );
+              return;
+            }
+
+            var produtos = resultado.dados;
+            if (produtos.length === 0) {
+              listaVazia.hidden = false;
+              listaVazia.textContent = 'Nenhum produto cadastrado ainda.';
+              return;
+            }
+
+            produtos.forEach(function (p) {
+              var tr = document.createElement('tr');
+
+              var tdSku = document.createElement('td');
+              tdSku.textContent = p.sku == null ? '' : String(p.sku);
+
+              var tdNome = document.createElement('td');
+              tdNome.textContent = p.nome == null ? '' : String(p.nome);
+
+              var tdUn = document.createElement('td');
+              tdUn.textContent = p.unidadeMedida == null ? '' : String(p.unidadeMedida);
+
+              var tdSituacao = document.createElement('td');
+              var selo = document.createElement('span');
+              selo.className = 'selo ' + (p.ativo ? 'selo--ativo' : 'selo--inativo');
+              selo.textContent = p.ativo ? 'Ativo' : 'Inativo';
+              tdSituacao.appendChild(selo);
+
+              var tdAcoes = document.createElement('td');
+              var botaoEditar = document.createElement('button');
+              botaoEditar.type = 'button';
+              botaoEditar.className = 'botao botao--secundario botao--pequeno';
+              botaoEditar.textContent = 'Editar';
+              botaoEditar.addEventListener('click', function () {
+                abrirEdicao(p);
+              });
+              tdAcoes.appendChild(botaoEditar);
+
+              tr.appendChild(tdSku);
+              tr.appendChild(tdNome);
+              tr.appendChild(tdUn);
+              tr.appendChild(tdSituacao);
+              tr.appendChild(tdAcoes);
+              corpoTabela.appendChild(tr);
+            });
+          })
+          .catch(function () {
+            listaVazia.hidden = false;
+            listaVazia.textContent = 'Falha de conexão ao carregar a lista de produtos.';
+          });
+      }
+
+      function abrirEdicao(produto) {
+        produtoEmEdicaoId = produto.id;
+        editSku.value = produto.sku == null ? '' : String(produto.sku);
+        editNome.value = produto.nome == null ? '' : String(produto.nome);
+        editDescricao.value = produto.descricao == null ? '' : String(produto.descricao);
+        editUnidade.value = produto.unidadeMedida == null ? '' : String(produto.unidadeMedida);
+        editAtivo.checked = produto.ativo === true;
+        secaoAtualizar.style.display = 'block';
+        secaoAtualizar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        editNome.focus();
+      }
+
+      function fecharEdicao() {
+        produtoEmEdicaoId = null;
+        formAtualizar.reset();
+        secaoAtualizar.style.display = 'none';
+      }
+
+      formCadastrar.addEventListener('submit', function (evento) {
+        evento.preventDefault();
+        limparMensagem();
+
+        var sku = novoSku.value.trim();
+        var nome = novoNome.value.trim();
+        var unidade = novaUnidade.value.trim();
+        var descricao = novaDescricao.value.trim();
+
+        if (sku === '') {
+          exibirMensagem('erro', 'Informe o SKU do produto.');
+          novoSku.focus();
+          return;
+        }
+        if (nome === '') {
+          exibirMensagem('erro', 'Informe o nome do produto.');
+          novoNome.focus();
+          return;
+        }
+        if (unidade === '') {
+          exibirMensagem('erro', 'Informe a unidade de medida.');
+          novaUnidade.focus();
+          return;
+        }
+
+        var corpo = { sku: sku, nome: nome, unidadeMedida: unidade };
+        if (descricao !== '') {
+          corpo.descricao = descricao;
+        }
+
+        botaoCadastrar.disabled = true;
+        botaoCadastrar.textContent = 'Enviando...';
+
+        fetch('/api/produtos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(corpo)
+        })
+          .then(lerJson)
+          .then(function (resultado) {
+            if (!resultado.ok) {
+              exibirMensagem('erro', escaparHtml(
+                mensagemErroDaResposta(resultado.dados, 'Não foi possível cadastrar o produto.')
+              ));
+              return;
+            }
+            var p = resultado.dados;
+            exibirMensagem('sucesso',
+              '<strong>Produto cadastrado</strong>' +
+              escaparHtml(p.nome) + ' (SKU ' + escaparHtml(p.sku) + ') criado com sucesso.'
+            );
+            formCadastrar.reset();
+            novoSku.focus();
+            carregarLista();
+          })
+          .catch(function () {
+            exibirMensagem('erro', 'Falha de conexão com o servidor. Verifique sua rede e tente novamente.');
+          })
+          .finally(function () {
+            botaoCadastrar.disabled = false;
+            botaoCadastrar.textContent = 'Cadastrar';
+          });
+      });
+
+      formAtualizar.addEventListener('submit', function (evento) {
+        evento.preventDefault();
+        limparMensagem();
+
+        if (!produtoEmEdicaoId) {
+          exibirMensagem('erro', 'Selecione um produto na lista para editar.');
+          return;
+        }
+
+        var nome = editNome.value.trim();
+        var unidade = editUnidade.value.trim();
+        var descricao = editDescricao.value.trim();
+
+        if (nome === '') {
+          exibirMensagem('erro', 'Informe o nome do produto.');
+          editNome.focus();
+          return;
+        }
+        if (unidade === '') {
+          exibirMensagem('erro', 'Informe a unidade de medida.');
+          editUnidade.focus();
+          return;
+        }
+
+        var corpo = {
+          nome: nome,
+          descricao: descricao,
+          unidadeMedida: unidade,
+          ativo: editAtivo.checked
+        };
+
+        botaoAtualizar.disabled = true;
+        botaoAtualizar.textContent = 'Enviando...';
+
+        fetch('/api/produtos/' + encodeURIComponent(produtoEmEdicaoId), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(corpo)
+        })
+          .then(lerJson)
+          .then(function (resultado) {
+            if (!resultado.ok) {
+              exibirMensagem('erro', escaparHtml(
+                mensagemErroDaResposta(resultado.dados, 'Não foi possível atualizar o produto.')
+              ));
+              return;
+            }
+            var p = resultado.dados;
+            exibirMensagem('sucesso',
+              '<strong>Produto atualizado</strong>' +
+              escaparHtml(p.nome) + ' (SKU ' + escaparHtml(p.sku) + ') atualizado com sucesso.'
+            );
+            fecharEdicao();
+            carregarLista();
+          })
+          .catch(function () {
+            exibirMensagem('erro', 'Falha de conexão com o servidor. Verifique sua rede e tente novamente.');
+          })
+          .finally(function () {
+            botaoAtualizar.disabled = false;
+            botaoAtualizar.textContent = 'Salvar alterações';
+          });
+      });
+
+      botaoCancelarEdicao.addEventListener('click', function () {
+        fecharEdicao();
+        limparMensagem();
+      });
+
+      carregarLista();
+    })();
+  </script>
+</body>
+</html>
