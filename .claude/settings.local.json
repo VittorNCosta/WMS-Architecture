@@ -22,7 +22,9 @@
       "PowerShell(Stop-Process -Id 3992 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 800; $still = Get-NetTCPConnection -LocalPort 3333 -State Listen -ErrorAction SilentlyContinue; if \\($still\\) { 'Porta 3333 AINDA ocupada por PID ' + \\($still.OwningProcess -join ','\\) } else { 'Porta 3333 liberada' })",
       "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:3333/status)",
       "PowerShell($conns = Get-NetTCPConnection -LocalPort 3333 -State Listen -ErrorAction SilentlyContinue; if \\($conns\\) { $conns | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } }; Start-Sleep -Milliseconds 700; $still = Get-NetTCPConnection -LocalPort 3333 -State Listen -ErrorAction SilentlyContinue; if \\($still\\) { 'AINDA escutando: PID ' + \\($still.OwningProcess -join ','\\) } else { 'Servidor encerrado — porta 3333 livre' })",
-      "Bash(dir /B src)"
+      "Bash(dir /B src)",
+      "PowerShell(Start-Process -FilePath \"npm\" -ArgumentList \"run\",\"start\" -WindowStyle Hidden -RedirectStandardOutput \"server.out.log\" -RedirectStandardError \"server.err.log\" -PassThru)",
+      "PowerShell($deadline = \\(Get-Date\\).AddSeconds\\(30\\); $ready = $false; while \\(\\(Get-Date\\) -lt $deadline -and -not $ready\\) { try { $r = Invoke-RestMethod http://localhost:3333/status -TimeoutSec 1; $ready = $true } catch { Start-Sleep -Milliseconds 500 } }; if \\($ready\\) { \"OK\"; $r | ConvertTo-Json } else { \"FAILED\"; Get-Content server.out.log -ErrorAction SilentlyContinue; Get-Content server.err.log -ErrorAction SilentlyContinue })"
     ]
   }
 }

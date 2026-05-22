@@ -57,6 +57,12 @@ export class JsonFileEstoqueRepository implements IEstoqueRepository {
     return this.linhas.filter((r) => r.produtoId === produtoId).map((r) => this.paraEntidade(r));
   }
 
+  async listarPorLocalizacao(localizacaoId: string): Promise<EstoqueItem[]> {
+    return this.linhas
+      .filter((r) => r.localizacaoId === localizacaoId)
+      .map((r) => this.paraEntidade(r));
+  }
+
   async listarTodos(): Promise<EstoqueItem[]> {
     return this.linhas.map((r) => this.paraEntidade(r));
   }

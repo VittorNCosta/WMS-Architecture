@@ -385,9 +385,86 @@ Ao subir, o console mostra IDs de **usuários** e **localizações** (criados po
 | Expedição / saída (FIFO) | `POST` | `/expedicoes` | `{ produtoId, quantidade, usuarioId, documentoReferencia? }` |
 | Consulta de saldo | `GET` | `/estoque/:produtoId` | — |
 | Rastreabilidade | `GET` | `/movimentacoes?produtoId=` | — |
-| (apoio) usuários / localizações | `GET` | `/usuarios` · `/localizacoes` | — |
+| **Usuários — listar** | `GET` | `/usuarios` | — |
+| **Usuários — obter** | `GET` | `/usuarios/:id` | — |
+| **Usuários — cadastrar** | `POST` | `/usuarios` | `{ nome, login, perfil }` |
+| **Usuários — atualizar** | `PUT` | `/usuarios/:id` | `{ nome?, perfil? }` (login é imutável) |
+| **Usuários — ativar/inativar** | `PATCH` | `/usuarios/:id/status` | `{ ativo: boolean }` |
+| **Localizações — listar** | `GET` | `/localizacoes` | — |
+| **Localizações — obter** | `GET` | `/localizacoes/:id` | — |
+| **Localizações — cadastrar** | `POST` | `/localizacoes` | `{ codigo, descricao? }` |
+| **Localizações — atualizar** | `PUT` | `/localizacoes/:id` | `{ codigo?, descricao? }` |
+| **Localizações — ativar/inativar** | `PATCH` | `/localizacoes/:id/status` | `{ ativo: boolean }` |
 
 Regras de negócio violadas (produto inexistente, saldo insuficiente, etc.) retornam **HTTP 422** com `{ "erro": "..." }`.
+
+## 16. Descrição das implementações e fluxo arquitetural (Sprint 2)
+
+A Sprint 2 entregou duas funcionalidades **novas** que atravessam todas as camadas da Onion. Em ambas, a regra de negócio vive no **Domain + Application** (nunca na UI ou em controller).
+
+### F1 — Gerenciamento de Usuários (CRUD + status)
+
+- **Fluxo começa em:** `POST/GET/PUT/PATCH /api/usuarios[...]` (Express).
+- **Componentes por camada:**
+  - **Presentation:** `src/presentation/http/controllers/UsuariosController.ts` (objeto literal — `criar`/`listar`/`obter`/`atualizar`/`alterarStatus`) + rotas em `src/presentation/http/routes.ts`. `errorHandler.ts` traduz `DomainError → HTTP 422`.
+  - **Application:** `src/application/use-cases/usuarios/` — `CadastrarUsuario`, `AtualizarUsuario`, `AlterarStatusUsuario`, `ConsultarUsuario`. Recebem `IUsuarioRepository` por injeção (DI no `container.ts`).
+  - **Domain:** `src/domain/entities/Usuario.ts` (com `atualizar`, `ativar`, `inativar`, `temPerfil` e `login` imutável); `src/domain/enums/PerfilUsuario.ts`; `src/domain/repositories/IUsuarioRepository.ts`.
+  - **Infrastructure:** `src/infrastructure/repositories/JsonFileUsuarioRepository.ts` — `salvar()` já é UPSERT (atualização aproveita o mesmo método).
+- **Regras de negócio (Domain/Application):**
+  - **Domain (entidade):** `nome` e `login` obrigatórios; `perfil ∈ PerfilUsuario`; `login` é imutável após criação.
+  - **Application:**
+    - `CadastrarUsuario` rejeita login duplicado (case-insensitive) com mensagem `Já existe um usuário com o login "...".`.
+    - `AtualizarUsuario` impede remover o perfil ADMIN do último administrador ativo (`Não é possível remover o perfil ADMIN do último administrador ativo.`).
+    - `AlterarStatusUsuario` impede inativar o último ADMIN ativo (`Não é possível inativar o último administrador ativo.`) e exige `ativo: boolean`.
+- **Persistência:** `data/wms-db.json`, tabela `usuarios` (linhas `{ id, nome, login, perfil, ativo }`).
+- **Como testar (PowerShell):**
+  ```powershell
+  Invoke-RestMethod http://localhost:3333/api/usuarios
+  $novo = Invoke-RestMethod -Method Post http://localhost:3333/api/usuarios `
+    -ContentType 'application/json' `
+    -Body '{"nome":"Joana Conferente","login":"joana","perfil":"RECEBIMENTO"}'
+  Invoke-RestMethod -Method Put "http://localhost:3333/api/usuarios/$($novo.id)" `
+    -ContentType 'application/json' -Body '{"perfil":"EXPEDICAO"}'
+  Invoke-RestMethod -Method Patch "http://localhost:3333/api/usuarios/$($novo.id)/status" `
+    -ContentType 'application/json' -Body '{"ativo":false}'
+  ```
+- **Resultado esperado:** criação 201 com o usuário; atualização 200 com o perfil alterado; inativação 200 com `ativo=false`. Inativar o único ADMIN → **422** `{"erro":"Não é possível inativar o último administrador ativo."}`.
+
+### F2 — Gerenciamento de Localizações (CRUD + status)
+
+- **Fluxo começa em:** `POST/GET/PUT/PATCH /api/localizacoes[...]` (Express).
+- **Componentes por camada:**
+  - **Presentation:** `src/presentation/http/controllers/LocalizacoesController.ts` + rotas em `routes.ts`.
+  - **Application:** `src/application/use-cases/localizacoes/` — `CadastrarLocalizacao`, `AtualizarLocalizacao`, `AlterarStatusLocalizacao` (depende de `IEstoqueRepository` para a regra de integridade), `ConsultarLocalizacao`.
+  - **Domain:** `src/domain/entities/Localizacao.ts` (com novo campo `ativo`, métodos `atualizar`, `ativar`, `inativar`); `src/domain/repositories/ILocalizacaoRepository.ts`; `src/domain/repositories/IEstoqueRepository.ts` (com novo `listarPorLocalizacao`).
+  - **Infrastructure:** `src/infrastructure/repositories/JsonFileLocalizacaoRepository.ts` (serializa `ativo`, com migração leve `r.ativo ?? true` para JSON antigo) e `JsonFileEstoqueRepository.ts` (implementa `listarPorLocalizacao`). `LocalizacaoRow.ativo` em `JsonDatabase.ts`.
+- **Regras de negócio (Domain/Application):**
+  - **Domain (entidade):** `codigo` obrigatório; `descricao` opcional; nova localização nasce com `ativo = true`.
+  - **Application:**
+    - `CadastrarLocalizacao` rejeita código duplicado (case-insensitive) — `Já existe uma localização com o código "...".`.
+    - `AtualizarLocalizacao` permite alterar `codigo` mas checa unicidade contra outros IDs.
+    - `AlterarStatusLocalizacao` impede inativar uma localização com saldo (`quantidade > 0`) — `Não é possível inativar uma localização com estoque vinculado.`. Preserva integridade referencial lógica entre `Localizacao` e `EstoqueItem` sem precisar de FK no JSON.
+- **Persistência:** `data/wms-db.json`, tabela `localizacoes` (linhas `{ id, codigo, descricao, ativo }`).
+- **Como testar (PowerShell):**
+  ```powershell
+  $loc = Invoke-RestMethod -Method Post http://localhost:3333/api/localizacoes `
+    -ContentType 'application/json' `
+    -Body '{"codigo":"B-99-01","descricao":"Rua B prateleira temporária"}'
+  Invoke-RestMethod -Method Put "http://localhost:3333/api/localizacoes/$($loc.id)" `
+    -ContentType 'application/json' -Body '{"descricao":"Quarentena"}'
+  Invoke-RestMethod -Method Patch "http://localhost:3333/api/localizacoes/$($loc.id)/status" `
+    -ContentType 'application/json' -Body '{"ativo":false}'
+  ```
+- **Resultado esperado:** criação 201; atualização 200; inativação vazia 200. Inativar uma localização com saldo (ex.: `DOCA` após um recebimento) → **422** `{"erro":"Não é possível inativar uma localização com estoque vinculado."}`.
+
+### Testes automatizados das duas features
+
+```bash
+npm run typecheck   # tsc --noEmit
+npm test            # 5 arquivos / 31 testes — Vitest
+```
+
+Arquivos novos: `tests/domain/Usuario.test.ts`, `tests/domain/Localizacao.test.ts`, `tests/application/usuarios/AlterarStatusUsuario.test.ts`, `tests/application/localizacoes/AlterarStatusLocalizacao.test.ts` — cobrem as regras críticas (último ADMIN ativo, validação do `ativo`, estoque vinculado, id inexistente).
 
 ### Exemplo de fluxo (curl)
 

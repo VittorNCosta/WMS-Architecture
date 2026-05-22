@@ -7,7 +7,8 @@ import { ExpedicaoController } from './controllers/ExpedicaoController';
 import { EstoqueController } from './controllers/EstoqueController';
 import { RastreabilidadeController } from './controllers/RastreabilidadeController';
 import { AuthController } from './controllers/AuthController';
-import { repositorios } from '../container';
+import { UsuariosController } from './controllers/UsuariosController';
+import { LocalizacoesController } from './controllers/LocalizacoesController';
 
 export const router = Router();
 
@@ -37,10 +38,16 @@ router.get('/estoque/:produtoId', asyncHandler(EstoqueController.saldoPorProduto
 // --- Rastreabilidade ---
 router.get('/movimentacoes', asyncHandler(RastreabilidadeController.listar));
 
-// --- Catálogo de apoio (somente leitura) — útil para descobrir IDs de exemplo ---
-router.get('/usuarios', asyncHandler(async (_req, res) => {
-  res.json(await repositorios.usuarioRepo.listarTodos());
-}));
-router.get('/localizacoes', asyncHandler(async (_req, res) => {
-  res.json(await repositorios.localizacaoRepo.listarTodas());
-}));
+// --- Usuários (CRUD + status) ---
+router.post('/usuarios', asyncHandler(UsuariosController.criar));
+router.get('/usuarios', asyncHandler(UsuariosController.listar));
+router.get('/usuarios/:id', asyncHandler(UsuariosController.obter));
+router.put('/usuarios/:id', asyncHandler(UsuariosController.atualizar));
+router.patch('/usuarios/:id/status', asyncHandler(UsuariosController.alterarStatus));
+
+// --- Localizações (CRUD + status) ---
+router.post('/localizacoes', asyncHandler(LocalizacoesController.criar));
+router.get('/localizacoes', asyncHandler(LocalizacoesController.listar));
+router.get('/localizacoes/:id', asyncHandler(LocalizacoesController.obter));
+router.put('/localizacoes/:id', asyncHandler(LocalizacoesController.atualizar));
+router.patch('/localizacoes/:id/status', asyncHandler(LocalizacoesController.alterarStatus));

@@ -7,5 +7,6 @@ export interface IEstoqueRepository {
   remover(id: string): Promise<void>;
   buscarPorId(id: string): Promise<EstoqueItem | null>;
   listarPorProduto(produtoId: string): Promise<EstoqueItem[]>;
+  listarPorLocalizacao(localizacaoId: string): Promise<EstoqueItem[]>;
   listarTodos(): Promise<EstoqueItem[]>;
 }

@@ -30,6 +30,14 @@ import { RastrearMovimentacoes } from '../application/use-cases/rastreabilidade/
 import { ConsultarSaldo } from '../application/use-cases/estoque/ConsultarSaldo';
 import { ConsultarEstoqueGeral } from '../application/use-cases/estoque/ConsultarEstoqueGeral';
 import { AutenticarUsuario } from '../application/use-cases/autenticacao/AutenticarUsuario';
+import { CadastrarUsuario } from '../application/use-cases/usuarios/CadastrarUsuario';
+import { AtualizarUsuario } from '../application/use-cases/usuarios/AtualizarUsuario';
+import { AlterarStatusUsuario } from '../application/use-cases/usuarios/AlterarStatusUsuario';
+import { ConsultarUsuario } from '../application/use-cases/usuarios/ConsultarUsuario';
+import { CadastrarLocalizacao } from '../application/use-cases/localizacoes/CadastrarLocalizacao';
+import { AtualizarLocalizacao } from '../application/use-cases/localizacoes/AtualizarLocalizacao';
+import { AlterarStatusLocalizacao } from '../application/use-cases/localizacoes/AlterarStatusLocalizacao';
+import { ConsultarLocalizacao } from '../application/use-cases/localizacoes/ConsultarLocalizacao';
 
 // --- "Banco de dados" (arquivo JSON) ---
 // Pode ser sobrescrito pela variável de ambiente WMS_DB.
@@ -64,6 +72,14 @@ export const casosDeUso = {
   consultarSaldo: new ConsultarSaldo(estoqueRepo),
   consultarEstoqueGeral: new ConsultarEstoqueGeral(estoqueRepo, produtoRepo, localizacaoRepo),
   autenticarUsuario: new AutenticarUsuario(usuarioRepo),
+  cadastrarUsuario: new CadastrarUsuario(usuarioRepo),
+  atualizarUsuario: new AtualizarUsuario(usuarioRepo),
+  alterarStatusUsuario: new AlterarStatusUsuario(usuarioRepo),
+  consultarUsuario: new ConsultarUsuario(usuarioRepo),
+  cadastrarLocalizacao: new CadastrarLocalizacao(localizacaoRepo),
+  atualizarLocalizacao: new AtualizarLocalizacao(localizacaoRepo),
+  alterarStatusLocalizacao: new AlterarStatusLocalizacao(localizacaoRepo, estoqueRepo),
+  consultarLocalizacao: new ConsultarLocalizacao(localizacaoRepo),
 };
 
 export const caminhoBanco = ARQUIVO_BANCO;

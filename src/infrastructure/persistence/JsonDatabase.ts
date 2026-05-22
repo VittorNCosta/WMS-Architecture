@@ -27,6 +27,7 @@ export interface LocalizacaoRow {
   id: string;
   codigo: string;
   descricao: string | null;
+  ativo: boolean;
 }
 
 export interface EstoqueItemRow {

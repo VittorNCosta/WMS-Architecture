@@ -11,11 +11,12 @@ export class JsonFileLocalizacaoRepository implements ILocalizacaoRepository {
   }
 
   private paraRow(l: Localizacao): LocalizacaoRow {
-    return { id: l.id, codigo: l.codigo, descricao: l.descricao };
+    return { id: l.id, codigo: l.codigo, descricao: l.descricao, ativo: l.ativo };
   }
 
   private paraEntidade(r: LocalizacaoRow): Localizacao {
-    return new Localizacao(r.id, r.codigo, r.descricao);
+    // Migração leve: JSON antigo pode não ter `ativo` — assume true.
+    return new Localizacao(r.id, r.codigo, r.descricao, r.ativo ?? true);
   }
 
   async salvar(localizacao: Localizacao): Promise<void> {
