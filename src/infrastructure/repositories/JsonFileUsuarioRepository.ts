@@ -12,11 +12,18 @@ export class JsonFileUsuarioRepository implements IUsuarioRepository {
   }
 
   private paraRow(u: Usuario): UsuarioRow {
-    return { id: u.id, nome: u.nome, login: u.login, perfil: u.perfil, ativo: u.ativo };
+    return {
+      id: u.id,
+      nome: u.nome,
+      login: u.login,
+      perfil: u.perfil,
+      ativo: u.ativo,
+      passwordHash: u.passwordHash,
+    };
   }
 
   private paraEntidade(r: UsuarioRow): Usuario {
-    return new Usuario(r.id, r.nome, r.login, r.perfil as PerfilUsuario, r.ativo);
+    return new Usuario(r.id, r.nome, r.login, r.perfil as PerfilUsuario, r.ativo, r.passwordHash);
   }
 
   async salvar(usuario: Usuario): Promise<void> {

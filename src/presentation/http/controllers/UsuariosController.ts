@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { casosDeUso } from '../../container';
+import { actorFromRequest } from '../actor';
 
 /** Cadastro / atualização / consulta / status de usuários. */
 export const UsuariosController = {
   async criar(req: Request, res: Response): Promise<void> {
-    const usuario = await casosDeUso.cadastrarUsuario.execute(req.body);
+    const usuario = await casosDeUso.cadastrarUsuario.execute(req.body, actorFromRequest(req));
     res.status(201).json(usuario);
   },
 
@@ -17,12 +18,20 @@ export const UsuariosController = {
   },
 
   async atualizar(req: Request, res: Response): Promise<void> {
-    const usuario = await casosDeUso.atualizarUsuario.execute(req.params.id, req.body);
+    const usuario = await casosDeUso.atualizarUsuario.execute(
+      req.params.id,
+      req.body,
+      actorFromRequest(req),
+    );
     res.json(usuario);
   },
 
   async alterarStatus(req: Request, res: Response): Promise<void> {
-    const usuario = await casosDeUso.alterarStatusUsuario.execute(req.params.id, req.body);
+    const usuario = await casosDeUso.alterarStatusUsuario.execute(
+      req.params.id,
+      req.body,
+      actorFromRequest(req),
+    );
     res.json(usuario);
   },
 };

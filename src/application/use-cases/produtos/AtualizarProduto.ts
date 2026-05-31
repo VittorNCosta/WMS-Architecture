@@ -1,6 +1,10 @@
-import { Produto } from '../../../domain/entities/Produto';
-import { DomainError } from '../../../domain/errors/DomainError';
+import { AuditOperation } from '../../../domain/enums/AuditOperation';
+import { IAuditTrailRepository } from '../../../domain/repositories/IAuditTrailRepository';
 import { IProdutoRepository } from '../../../domain/repositories/IProdutoRepository';
+import { EntityFinder } from '../../../domain/services/EntityFinder';
+import { ProdutoDTO, toProdutoDTO } from '../../dtos/ProdutoDTO';
+import { Actor } from '../auditoria/Actor';
+import { registerAuditSafely } from '../auditoria/registerAuditSafely';
 
 export interface AtualizarProdutoInput {
   nome?: unknown;
@@ -11,14 +15,30 @@ export interface AtualizarProdutoInput {
 
 /** Caso de uso: atualizar dados de um produto existente. */
 export class AtualizarProduto {
-  constructor(private readonly produtos: IProdutoRepository) {}
+  constructor(
+    private readonly produtos: IProdutoRepository,
+    private readonly auditoria: IAuditTrailRepository,
+  ) {}
 
-  async execute(id: string, dados: AtualizarProdutoInput): Promise<Produto> {
-    const produto = await this.produtos.buscarPorId(id);
-    if (!produto) throw new DomainError('Produto não encontrado.');
+  async execute(id: string, dados: AtualizarProdutoInput, actor: Actor): Promise<ProdutoDTO> {
+    const produto = await EntityFinder.findOrThrow(
+      (pid) => this.produtos.buscarPorId(pid),
+      id,
+      'Produto',
+    );
 
     produto.atualizar(dados);
     await this.produtos.atualizar(produto);
-    return produto;
+
+    await registerAuditSafely(this.auditoria, {
+      actorUserId: actor.userId,
+      actorLogin: actor.login,
+      operation: AuditOperation.UPDATE,
+      entityType: 'Produto',
+      entityId: produto.id,
+      summary: `Produto "${produto.sku}" atualizado.`,
+    });
+
+    return toProdutoDTO(produto);
   }
 }

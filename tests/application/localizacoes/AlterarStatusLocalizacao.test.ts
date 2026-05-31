@@ -5,6 +5,7 @@ import { Localizacao } from '../../../src/domain/entities/Localizacao';
 import { DomainError } from '../../../src/domain/errors/DomainError';
 import { IEstoqueRepository } from '../../../src/domain/repositories/IEstoqueRepository';
 import { ILocalizacaoRepository } from '../../../src/domain/repositories/ILocalizacaoRepository';
+import { FakeAuditTrailRepository, ACTOR_TESTE } from '../../helpers/auditoria';
 
 class LocalizacaoRepoMemoria implements ILocalizacaoRepository {
   private dados = new Map<string, Localizacao>();
@@ -64,14 +65,14 @@ describe('AlterarStatusLocalizacao (caso de uso)', () => {
   beforeEach(() => {
     locRepo = new LocalizacaoRepoMemoria();
     estRepo = new EstoqueRepoMemoria();
-    caso = new AlterarStatusLocalizacao(locRepo, estRepo);
+    caso = new AlterarStatusLocalizacao(locRepo, estRepo, new FakeAuditTrailRepository());
   });
 
   it('inativa localização sem estoque', async () => {
     const l = Localizacao.criar({ codigo: 'A-01' });
     locRepo.inserir(l);
 
-    const r = await caso.execute(l.id, { ativo: false });
+    const r = await caso.execute(l.id, { ativo: false }, ACTOR_TESTE);
     expect(r.ativo).toBe(false);
   });
 
@@ -80,7 +81,7 @@ describe('AlterarStatusLocalizacao (caso de uso)', () => {
     locRepo.inserir(l);
     estRepo.inserir(EstoqueItem.criar({ produtoId: 'p1', quantidade: 5, localizacaoId: l.id }));
 
-    await expect(caso.execute(l.id, { ativo: false })).rejects.toThrow(
+    await expect(caso.execute(l.id, { ativo: false }, ACTOR_TESTE)).rejects.toThrow(
       'Não é possível inativar uma localização com estoque vinculado.',
     );
   });
@@ -90,19 +91,21 @@ describe('AlterarStatusLocalizacao (caso de uso)', () => {
     l.inativar();
     locRepo.inserir(l);
 
-    const r = await caso.execute(l.id, { ativo: true });
+    const r = await caso.execute(l.id, { ativo: true }, ACTOR_TESTE);
     expect(r.ativo).toBe(true);
   });
 
   it('rejeita id inexistente', async () => {
-    await expect(caso.execute('inexistente', { ativo: false })).rejects.toThrow(
-      'Localização não encontrada.',
+    await expect(caso.execute('inexistente', { ativo: false }, ACTOR_TESTE)).rejects.toThrow(
+      'Localização não encontrado(a).',
     );
   });
 
   it('rejeita "ativo" não-booleano', async () => {
     const l = Localizacao.criar({ codigo: 'A-01' });
     locRepo.inserir(l);
-    await expect(caso.execute(l.id, { ativo: 1 as unknown })).rejects.toThrow(DomainError);
+    await expect(caso.execute(l.id, { ativo: 1 as unknown }, ACTOR_TESTE)).rejects.toThrow(
+      DomainError,
+    );
   });
 });

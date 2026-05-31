@@ -56,6 +56,18 @@ export interface UsuarioRow {
   login: string;
   perfil: string; // PerfilUsuario
   ativo: boolean;
+  passwordHash: string;
+}
+
+export interface AuditTrailRow {
+  id: string;
+  occurredAt: string; // ISO 8601
+  actorUserId: string;
+  actorLogin: string;
+  operation: string; // AuditOperation
+  entityType: string;
+  entityId: string;
+  summary: string;
 }
 
 export interface DadosBanco {
@@ -64,10 +76,18 @@ export interface DadosBanco {
   estoque: EstoqueItemRow[];
   movimentacoes: MovimentacaoRow[];
   usuarios: UsuarioRow[];
+  auditoria: AuditTrailRow[];
 }
 
 function bancoVazio(): DadosBanco {
-  return { produtos: [], localizacoes: [], estoque: [], movimentacoes: [], usuarios: [] };
+  return {
+    produtos: [],
+    localizacoes: [],
+    estoque: [],
+    movimentacoes: [],
+    usuarios: [],
+    auditoria: [],
+  };
 }
 
 export class JsonDatabase {

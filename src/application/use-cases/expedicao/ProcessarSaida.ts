@@ -1,11 +1,16 @@
 import { Movimentacao } from '../../../domain/entities/Movimentacao';
+import { AuditOperation } from '../../../domain/enums/AuditOperation';
 import { TipoMovimentacao } from '../../../domain/enums/TipoMovimentacao';
-import { DomainError } from '../../../domain/errors/DomainError';
+import { IAuditTrailRepository } from '../../../domain/repositories/IAuditTrailRepository';
 import { IEstoqueRepository } from '../../../domain/repositories/IEstoqueRepository';
 import { IMovimentacaoRepository } from '../../../domain/repositories/IMovimentacaoRepository';
 import { IProdutoRepository } from '../../../domain/repositories/IProdutoRepository';
 import { IUsuarioRepository } from '../../../domain/repositories/IUsuarioRepository';
+import { EntityFinder } from '../../../domain/services/EntityFinder';
 import { PoliticaFifo } from '../../../domain/services/PoliticaFifo';
+import { MovimentacaoDTO, toMovimentacaoDTO } from '../../dtos/MovimentacaoDTO';
+import { Actor } from '../auditoria/Actor';
+import { registerAuditSafely } from '../auditoria/registerAuditSafely';
 
 export interface ProcessarSaidaInput {
   produtoId: string;
@@ -21,14 +26,21 @@ export class ProcessarSaida {
     private readonly movimentacoes: IMovimentacaoRepository,
     private readonly produtos: IProdutoRepository,
     private readonly usuarios: IUsuarioRepository,
+    private readonly auditoria: IAuditTrailRepository,
   ) {}
 
-  async execute(input: ProcessarSaidaInput): Promise<Movimentacao> {
-    const produto = await this.produtos.buscarPorId(input.produtoId);
-    if (!produto) throw new DomainError('Produto não encontrado.');
+  async execute(input: ProcessarSaidaInput, actor: Actor): Promise<MovimentacaoDTO> {
+    const produto = await EntityFinder.findOrThrow(
+      (id) => this.produtos.buscarPorId(id),
+      input.produtoId,
+      'Produto',
+    );
 
-    const usuario = await this.usuarios.buscarPorId(input.usuarioId);
-    if (!usuario) throw new DomainError('Usuário não encontrado.');
+    const usuario = await EntityFinder.findOrThrow(
+      (id) => this.usuarios.buscarPorId(id),
+      input.usuarioId,
+      'Usuário',
+    );
 
     const itens = await this.estoque.listarPorProduto(produto.id);
 
@@ -53,6 +65,15 @@ export class ProcessarSaida {
     });
     await this.movimentacoes.salvar(movimentacao);
 
-    return movimentacao;
+    await registerAuditSafely(this.auditoria, {
+      actorUserId: actor.userId,
+      actorLogin: actor.login,
+      operation: AuditOperation.STOCK_MOVE,
+      entityType: 'Estoque',
+      entityId: movimentacao.id,
+      summary: `Saída de ${input.quantidade} un. do produto ${produto.sku}.`,
+    });
+
+    return toMovimentacaoDTO(movimentacao);
   }
 }

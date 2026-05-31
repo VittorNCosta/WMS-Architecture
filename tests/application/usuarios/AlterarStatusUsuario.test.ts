@@ -4,6 +4,13 @@ import { Usuario } from '../../../src/domain/entities/Usuario';
 import { PerfilUsuario } from '../../../src/domain/enums/PerfilUsuario';
 import { DomainError } from '../../../src/domain/errors/DomainError';
 import { IUsuarioRepository } from '../../../src/domain/repositories/IUsuarioRepository';
+import { FakeAuditTrailRepository, ACTOR_TESTE } from '../../helpers/auditoria';
+
+const DUMMY_HASH = '$2a$10$dummyHashForTestsOnlyXXXXXXXXXXXXXXXXXXXXXXXXX';
+
+function criarUsuario(props: { nome: string; login: string; perfil: PerfilUsuario }): Usuario {
+  return Usuario.criar({ ...props, passwordHash: DUMMY_HASH });
+}
 
 class UsuarioRepoMemoria implements IUsuarioRepository {
   private dados = new Map<string, Usuario>();
@@ -37,51 +44,53 @@ describe('AlterarStatusUsuario (caso de uso)', () => {
 
   beforeEach(() => {
     repo = new UsuarioRepoMemoria();
-    caso = new AlterarStatusUsuario(repo);
+    caso = new AlterarStatusUsuario(repo, new FakeAuditTrailRepository());
   });
 
   it('rejeita inativar o único ADMIN ativo', async () => {
-    const admin = Usuario.criar({ nome: 'A', login: 'a', perfil: PerfilUsuario.ADMIN });
+    const admin = criarUsuario({ nome: 'A', login: 'a', perfil: PerfilUsuario.ADMIN });
     repo.inserir(admin);
 
-    await expect(caso.execute(admin.id, { ativo: false })).rejects.toThrow(
+    await expect(caso.execute(admin.id, { ativo: false }, ACTOR_TESTE)).rejects.toThrow(
       'Não é possível inativar o último administrador ativo.',
     );
   });
 
   it('permite inativar 1 de 2 ADMINs ativos', async () => {
-    const a1 = Usuario.criar({ nome: 'A1', login: 'a1', perfil: PerfilUsuario.ADMIN });
-    const a2 = Usuario.criar({ nome: 'A2', login: 'a2', perfil: PerfilUsuario.ADMIN });
+    const a1 = criarUsuario({ nome: 'A1', login: 'a1', perfil: PerfilUsuario.ADMIN });
+    const a2 = criarUsuario({ nome: 'A2', login: 'a2', perfil: PerfilUsuario.ADMIN });
     repo.inserir(a1);
     repo.inserir(a2);
 
-    const r = await caso.execute(a1.id, { ativo: false });
+    const r = await caso.execute(a1.id, { ativo: false }, ACTOR_TESTE);
     expect(r.ativo).toBe(false);
   });
 
   it('permite inativar um OPERADOR mesmo sem outro admin', async () => {
-    const admin = Usuario.criar({ nome: 'A', login: 'a', perfil: PerfilUsuario.ADMIN });
-    const op = Usuario.criar({ nome: 'O', login: 'o', perfil: PerfilUsuario.OPERADOR });
+    const admin = criarUsuario({ nome: 'A', login: 'a', perfil: PerfilUsuario.ADMIN });
+    const op = criarUsuario({ nome: 'O', login: 'o', perfil: PerfilUsuario.OPERADOR });
     repo.inserir(admin);
     repo.inserir(op);
 
-    const r = await caso.execute(op.id, { ativo: false });
+    const r = await caso.execute(op.id, { ativo: false }, ACTOR_TESTE);
     expect(r.ativo).toBe(false);
   });
 
   it('permite reativar usuário inativo (mesmo sem outros admins ativos)', async () => {
-    const admin = Usuario.criar({ nome: 'A', login: 'a', perfil: PerfilUsuario.ADMIN });
+    const admin = criarUsuario({ nome: 'A', login: 'a', perfil: PerfilUsuario.ADMIN });
     admin.inativar();
     repo.inserir(admin);
 
-    const r = await caso.execute(admin.id, { ativo: true });
+    const r = await caso.execute(admin.id, { ativo: true }, ACTOR_TESTE);
     expect(r.ativo).toBe(true);
   });
 
   it('rejeita "ativo" não-booleano', async () => {
-    const u = Usuario.criar({ nome: 'X', login: 'x', perfil: PerfilUsuario.OPERADOR });
+    const u = criarUsuario({ nome: 'X', login: 'x', perfil: PerfilUsuario.OPERADOR });
     repo.inserir(u);
 
-    await expect(caso.execute(u.id, { ativo: 'sim' as unknown })).rejects.toThrow(DomainError);
+    await expect(caso.execute(u.id, { ativo: 'sim' as unknown }, ACTOR_TESTE)).rejects.toThrow(
+      DomainError,
+    );
   });
 });

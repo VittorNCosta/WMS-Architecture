@@ -3,38 +3,80 @@ import { Usuario } from '../../src/domain/entities/Usuario';
 import { PerfilUsuario } from '../../src/domain/enums/PerfilUsuario';
 import { DomainError } from '../../src/domain/errors/DomainError';
 
+// Hash dummy fixo (formato bcrypt válido) — só pra satisfazer a invariante
+// da entidade, que exige um passwordHash não vazio. Não é hash de senha real.
+const DUMMY_HASH = '$2a$10$dummyHashForTestsOnlyXXXXXXXXXXXXXXXXXXXXXXXXX';
+
 describe('Usuario (entidade)', () => {
   describe('criar', () => {
     it('cria com dados válidos e fica ativo por padrão', () => {
-      const u = Usuario.criar({ nome: 'Joana', login: 'joana', perfil: PerfilUsuario.OPERADOR });
+      const u = Usuario.criar({
+        nome: 'Joana',
+        login: 'joana',
+        perfil: PerfilUsuario.OPERADOR,
+        passwordHash: DUMMY_HASH,
+      });
       expect(u.nome).toBe('Joana');
       expect(u.login).toBe('joana');
       expect(u.perfil).toBe(PerfilUsuario.OPERADOR);
       expect(u.ativo).toBe(true);
       expect(u.id).toBeDefined();
+      expect(u.passwordHash).toBe(DUMMY_HASH);
     });
 
     it('rejeita perfil inválido', () => {
       expect(() =>
-        Usuario.criar({ nome: 'X', login: 'x', perfil: 'INEXISTENTE' as PerfilUsuario }),
+        Usuario.criar({
+          nome: 'X',
+          login: 'x',
+          perfil: 'INEXISTENTE' as PerfilUsuario,
+          passwordHash: DUMMY_HASH,
+        }),
       ).toThrow(DomainError);
     });
 
     it('rejeita nome vazio', () => {
       expect(() =>
-        Usuario.criar({ nome: '   ', login: 'x', perfil: PerfilUsuario.OPERADOR }),
+        Usuario.criar({
+          nome: '   ',
+          login: 'x',
+          perfil: PerfilUsuario.OPERADOR,
+          passwordHash: DUMMY_HASH,
+        }),
       ).toThrow(DomainError);
     });
 
     it('rejeita login vazio', () => {
       expect(() =>
-        Usuario.criar({ nome: 'X', login: '', perfil: PerfilUsuario.OPERADOR }),
+        Usuario.criar({
+          nome: 'X',
+          login: '',
+          perfil: PerfilUsuario.OPERADOR,
+          passwordHash: DUMMY_HASH,
+        }),
+      ).toThrow(DomainError);
+    });
+
+    it('rejeita passwordHash vazio', () => {
+      expect(() =>
+        Usuario.criar({
+          nome: 'X',
+          login: 'x',
+          perfil: PerfilUsuario.OPERADOR,
+          passwordHash: '',
+        }),
       ).toThrow(DomainError);
     });
   });
 
   describe('atualizar', () => {
-    const novo = () => Usuario.criar({ nome: 'A', login: 'a', perfil: PerfilUsuario.OPERADOR });
+    const novo = () =>
+      Usuario.criar({
+        nome: 'A',
+        login: 'a',
+        perfil: PerfilUsuario.OPERADOR,
+        passwordHash: DUMMY_HASH,
+      });
 
     it('atualiza apenas o nome', () => {
       const u = novo();
@@ -60,9 +102,38 @@ describe('Usuario (entidade)', () => {
     });
   });
 
+  describe('alterarPasswordHash', () => {
+    it('atualiza o hash quando válido', () => {
+      const u = Usuario.criar({
+        nome: 'A',
+        login: 'a',
+        perfil: PerfilUsuario.ADMIN,
+        passwordHash: DUMMY_HASH,
+      });
+      const novoHash = '$2a$10$anotherDummyHashXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+      u.alterarPasswordHash(novoHash);
+      expect(u.passwordHash).toBe(novoHash);
+    });
+
+    it('rejeita hash vazio', () => {
+      const u = Usuario.criar({
+        nome: 'A',
+        login: 'a',
+        perfil: PerfilUsuario.ADMIN,
+        passwordHash: DUMMY_HASH,
+      });
+      expect(() => u.alterarPasswordHash('')).toThrow(DomainError);
+    });
+  });
+
   describe('ativar/inativar e temPerfil', () => {
     it('inativa e reativa', () => {
-      const u = Usuario.criar({ nome: 'A', login: 'a', perfil: PerfilUsuario.ADMIN });
+      const u = Usuario.criar({
+        nome: 'A',
+        login: 'a',
+        perfil: PerfilUsuario.ADMIN,
+        passwordHash: DUMMY_HASH,
+      });
       u.inativar();
       expect(u.ativo).toBe(false);
       u.ativar();
@@ -70,8 +141,18 @@ describe('Usuario (entidade)', () => {
     });
 
     it('temPerfil identifica ADMIN', () => {
-      const admin = Usuario.criar({ nome: 'A', login: 'a', perfil: PerfilUsuario.ADMIN });
-      const op = Usuario.criar({ nome: 'B', login: 'b', perfil: PerfilUsuario.OPERADOR });
+      const admin = Usuario.criar({
+        nome: 'A',
+        login: 'a',
+        perfil: PerfilUsuario.ADMIN,
+        passwordHash: DUMMY_HASH,
+      });
+      const op = Usuario.criar({
+        nome: 'B',
+        login: 'b',
+        perfil: PerfilUsuario.OPERADOR,
+        passwordHash: DUMMY_HASH,
+      });
       expect(admin.temPerfil(PerfilUsuario.ADMIN)).toBe(true);
       expect(op.temPerfil(PerfilUsuario.ADMIN)).toBe(false);
       expect(op.temPerfil(PerfilUsuario.OPERADOR, PerfilUsuario.ADMIN)).toBe(true);

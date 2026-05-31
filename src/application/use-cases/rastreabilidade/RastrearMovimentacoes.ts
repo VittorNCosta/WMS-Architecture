@@ -1,5 +1,5 @@
-import { Movimentacao } from '../../../domain/entities/Movimentacao';
 import { IMovimentacaoRepository } from '../../../domain/repositories/IMovimentacaoRepository';
+import { MovimentacaoDTO, toMovimentacaoDTO } from '../../dtos/MovimentacaoDTO';
 
 export interface RastrearMovimentacoesFiltro {
   produtoId?: string;
@@ -9,12 +9,14 @@ export interface RastrearMovimentacoesFiltro {
 export class RastrearMovimentacoes {
   constructor(private readonly movimentacoes: IMovimentacaoRepository) {}
 
-  async execute(filtro: RastrearMovimentacoesFiltro = {}): Promise<Movimentacao[]> {
+  async execute(filtro: RastrearMovimentacoesFiltro = {}): Promise<MovimentacaoDTO[]> {
     const lista = filtro.produtoId
       ? await this.movimentacoes.listarPorProduto(filtro.produtoId)
       : await this.movimentacoes.listarTodas();
 
     // Mais recentes primeiro.
-    return [...lista].sort((a, b) => b.dataHora.getTime() - a.dataHora.getTime());
+    return [...lista]
+      .sort((a, b) => b.dataHora.getTime() - a.dataHora.getTime())
+      .map(toMovimentacaoDTO);
   }
 }

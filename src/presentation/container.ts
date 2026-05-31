@@ -13,11 +13,14 @@ import { Usuario } from '../domain/entities/Usuario';
 import { PerfilUsuario } from '../domain/enums/PerfilUsuario';
 
 import { JsonDatabase } from '../infrastructure/persistence/JsonDatabase';
+import { JsonFileAuditTrailRepository } from '../infrastructure/repositories/JsonFileAuditTrailRepository';
 import { JsonFileEstoqueRepository } from '../infrastructure/repositories/JsonFileEstoqueRepository';
 import { JsonFileLocalizacaoRepository } from '../infrastructure/repositories/JsonFileLocalizacaoRepository';
 import { JsonFileMovimentacaoRepository } from '../infrastructure/repositories/JsonFileMovimentacaoRepository';
 import { JsonFileProdutoRepository } from '../infrastructure/repositories/JsonFileProdutoRepository';
 import { JsonFileUsuarioRepository } from '../infrastructure/repositories/JsonFileUsuarioRepository';
+import { BcryptHasher } from '../infrastructure/security/BcryptHasher';
+import { InMemorySessionStore } from '../infrastructure/security/InMemorySessionStore';
 
 import { CadastrarProduto } from '../application/use-cases/produtos/CadastrarProduto';
 import { AtualizarProduto } from '../application/use-cases/produtos/AtualizarProduto';
@@ -29,6 +32,7 @@ import { ProcessarSaida } from '../application/use-cases/expedicao/ProcessarSaid
 import { RastrearMovimentacoes } from '../application/use-cases/rastreabilidade/RastrearMovimentacoes';
 import { ConsultarSaldo } from '../application/use-cases/estoque/ConsultarSaldo';
 import { ConsultarEstoqueGeral } from '../application/use-cases/estoque/ConsultarEstoqueGeral';
+import { StockOverviewConsolidator } from '../application/use-cases/estoque/StockOverviewConsolidator';
 import { AutenticarUsuario } from '../application/use-cases/autenticacao/AutenticarUsuario';
 import { CadastrarUsuario } from '../application/use-cases/usuarios/CadastrarUsuario';
 import { AtualizarUsuario } from '../application/use-cases/usuarios/AtualizarUsuario';
@@ -38,18 +42,26 @@ import { CadastrarLocalizacao } from '../application/use-cases/localizacoes/Cada
 import { AtualizarLocalizacao } from '../application/use-cases/localizacoes/AtualizarLocalizacao';
 import { AlterarStatusLocalizacao } from '../application/use-cases/localizacoes/AlterarStatusLocalizacao';
 import { ConsultarLocalizacao } from '../application/use-cases/localizacoes/ConsultarLocalizacao';
+import { ListAuditTrail } from '../application/use-cases/auditoria/ListAuditTrail';
+
+import { buildAuthenticationMiddleware } from './http/middlewares/authenticationMiddleware';
+import { adminAuthorizationMiddleware } from './http/middlewares/adminAuthorizationMiddleware';
 
 // --- "Banco de dados" (arquivo JSON) ---
 // Pode ser sobrescrito pela variável de ambiente WMS_DB.
 const ARQUIVO_BANCO = process.env.WMS_DB ?? resolve(process.cwd(), 'data', 'wms-db.json');
 const db = new JsonDatabase(ARQUIVO_BANCO);
 
-// --- Infraestrutura (repositórios — implementações concretas das interfaces do Domain) ---
+// --- Infraestrutura (repositórios + segurança) ---
 const produtoRepo = new JsonFileProdutoRepository(db);
 const localizacaoRepo = new JsonFileLocalizacaoRepository(db);
 const estoqueRepo = new JsonFileEstoqueRepository(db);
 const movimentacaoRepo = new JsonFileMovimentacaoRepository(db);
 const usuarioRepo = new JsonFileUsuarioRepository(db);
+const auditoriaRepo = new JsonFileAuditTrailRepository(db);
+
+const hasher = new BcryptHasher();
+const sessionStore = new InMemorySessionStore();
 
 export const repositorios = {
   produtoRepo,
@@ -57,30 +69,36 @@ export const repositorios = {
   estoqueRepo,
   movimentacaoRepo,
   usuarioRepo,
+  auditoriaRepo,
 };
 
 // --- Casos de uso (recebem as abstrações por injeção de dependência) ---
 export const casosDeUso = {
-  cadastrarProduto: new CadastrarProduto(produtoRepo),
-  atualizarProduto: new AtualizarProduto(produtoRepo),
+  cadastrarProduto: new CadastrarProduto(produtoRepo, auditoriaRepo),
+  atualizarProduto: new AtualizarProduto(produtoRepo, auditoriaRepo),
   consultarProduto: new ConsultarProduto(produtoRepo),
-  processarEntrada: new ProcessarEntrada(estoqueRepo, movimentacaoRepo, produtoRepo, usuarioRepo, localizacaoRepo),
-  armazenarItem: new ArmazenarItem(estoqueRepo, movimentacaoRepo, localizacaoRepo, usuarioRepo),
-  transferirSaldo: new TransferirSaldo(estoqueRepo, movimentacaoRepo, produtoRepo, localizacaoRepo, usuarioRepo),
-  processarSaida: new ProcessarSaida(estoqueRepo, movimentacaoRepo, produtoRepo, usuarioRepo),
+  processarEntrada: new ProcessarEntrada(estoqueRepo, movimentacaoRepo, produtoRepo, usuarioRepo, localizacaoRepo, auditoriaRepo),
+  armazenarItem: new ArmazenarItem(estoqueRepo, movimentacaoRepo, localizacaoRepo, usuarioRepo, produtoRepo, auditoriaRepo),
+  transferirSaldo: new TransferirSaldo(estoqueRepo, movimentacaoRepo, produtoRepo, localizacaoRepo, usuarioRepo, auditoriaRepo),
+  processarSaida: new ProcessarSaida(estoqueRepo, movimentacaoRepo, produtoRepo, usuarioRepo, auditoriaRepo),
   rastrearMovimentacoes: new RastrearMovimentacoes(movimentacaoRepo),
   consultarSaldo: new ConsultarSaldo(estoqueRepo),
-  consultarEstoqueGeral: new ConsultarEstoqueGeral(estoqueRepo, produtoRepo, localizacaoRepo),
-  autenticarUsuario: new AutenticarUsuario(usuarioRepo),
-  cadastrarUsuario: new CadastrarUsuario(usuarioRepo),
-  atualizarUsuario: new AtualizarUsuario(usuarioRepo),
-  alterarStatusUsuario: new AlterarStatusUsuario(usuarioRepo),
+  consultarEstoqueGeral: new ConsultarEstoqueGeral(estoqueRepo, produtoRepo, localizacaoRepo, new StockOverviewConsolidator()),
+  autenticarUsuario: new AutenticarUsuario(usuarioRepo, hasher, sessionStore, auditoriaRepo),
+  cadastrarUsuario: new CadastrarUsuario(usuarioRepo, hasher, auditoriaRepo),
+  atualizarUsuario: new AtualizarUsuario(usuarioRepo, hasher, auditoriaRepo),
+  alterarStatusUsuario: new AlterarStatusUsuario(usuarioRepo, auditoriaRepo),
   consultarUsuario: new ConsultarUsuario(usuarioRepo),
-  cadastrarLocalizacao: new CadastrarLocalizacao(localizacaoRepo),
-  atualizarLocalizacao: new AtualizarLocalizacao(localizacaoRepo),
-  alterarStatusLocalizacao: new AlterarStatusLocalizacao(localizacaoRepo, estoqueRepo),
+  cadastrarLocalizacao: new CadastrarLocalizacao(localizacaoRepo, auditoriaRepo),
+  atualizarLocalizacao: new AtualizarLocalizacao(localizacaoRepo, auditoriaRepo),
+  alterarStatusLocalizacao: new AlterarStatusLocalizacao(localizacaoRepo, estoqueRepo, auditoriaRepo),
   consultarLocalizacao: new ConsultarLocalizacao(localizacaoRepo),
+  listAuditTrail: new ListAuditTrail(auditoriaRepo),
 };
+
+// --- Middlewares de segurança expostos para o pipeline HTTP ---
+export const authenticationMiddleware = buildAuthenticationMiddleware(sessionStore, usuarioRepo);
+export { adminAuthorizationMiddleware };
 
 export const caminhoBanco = ARQUIVO_BANCO;
 
@@ -94,11 +112,28 @@ export interface ItemSeed {
  * Carrega usuários e localizações de exemplo — só na primeira execução
  * (quando o arquivo JSON ainda está vazio). É idempotente: rodar de novo
  * não duplica nada.
+ *
+ * Senha inicial para todos os usuários de seed: "trocar123" (documentado no README).
  */
 export async function seed(): Promise<ItemSeed[]> {
   if ((await usuarioRepo.listarTodos()).length === 0) {
-    await usuarioRepo.salvar(Usuario.criar({ nome: 'Administrador', login: 'admin', perfil: PerfilUsuario.ADMIN }));
-    await usuarioRepo.salvar(Usuario.criar({ nome: 'Operador de Estoque', login: 'operador', perfil: PerfilUsuario.OPERADOR }));
+    const defaultPasswordHash = await hasher.hash('trocar123');
+    await usuarioRepo.salvar(
+      Usuario.criar({
+        nome: 'Administrador',
+        login: 'admin',
+        perfil: PerfilUsuario.ADMIN,
+        passwordHash: defaultPasswordHash,
+      }),
+    );
+    await usuarioRepo.salvar(
+      Usuario.criar({
+        nome: 'Operador de Estoque',
+        login: 'operador',
+        perfil: PerfilUsuario.OPERADOR,
+        passwordHash: defaultPasswordHash,
+      }),
+    );
   }
 
   if ((await localizacaoRepo.listarTodas()).length === 0) {

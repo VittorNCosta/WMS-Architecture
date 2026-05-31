@@ -11,9 +11,19 @@ export class Usuario {
     public readonly login: string,
     public perfil: PerfilUsuario,
     public ativo: boolean,
-  ) {}
+    public passwordHash: string,
+  ) {
+    if (typeof passwordHash !== 'string' || passwordHash.trim().length < 4) {
+      throw new DomainError('Hash de senha do usuário é obrigatório.');
+    }
+  }
 
-  static criar(props: { nome: unknown; login: unknown; perfil: PerfilUsuario }): Usuario {
+  static criar(props: {
+    nome: unknown;
+    login: unknown;
+    perfil: PerfilUsuario;
+    passwordHash: string;
+  }): Usuario {
     if (!Object.values(PerfilUsuario).includes(props.perfil)) {
       throw new DomainError(`Perfil de usuário inválido: ${String(props.perfil)}`);
     }
@@ -23,6 +33,7 @@ export class Usuario {
       textoObrigatorio(props.login, 'Login do usuário'),
       props.perfil,
       true,
+      props.passwordHash,
     );
   }
 
@@ -37,6 +48,14 @@ export class Usuario {
       }
       this.perfil = dados.perfil as PerfilUsuario;
     }
+  }
+
+  /** Atualiza o hash de senha (a validação da senha em texto puro fica na PasswordPolicy). */
+  alterarPasswordHash(newHash: string): void {
+    if (typeof newHash !== 'string' || newHash.trim().length < 4) {
+      throw new DomainError('Hash de senha do usuário é obrigatório.');
+    }
+    this.passwordHash = newHash;
   }
 
   ativar(): void {

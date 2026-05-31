@@ -1,12 +1,19 @@
 import { EstoqueItem } from '../../../domain/entities/EstoqueItem';
 import { Movimentacao } from '../../../domain/entities/Movimentacao';
+import { AuditOperation } from '../../../domain/enums/AuditOperation';
 import { TipoMovimentacao } from '../../../domain/enums/TipoMovimentacao';
 import { DomainError } from '../../../domain/errors/DomainError';
+import { IAuditTrailRepository } from '../../../domain/repositories/IAuditTrailRepository';
 import { IEstoqueRepository } from '../../../domain/repositories/IEstoqueRepository';
 import { ILocalizacaoRepository } from '../../../domain/repositories/ILocalizacaoRepository';
 import { IMovimentacaoRepository } from '../../../domain/repositories/IMovimentacaoRepository';
 import { IProdutoRepository } from '../../../domain/repositories/IProdutoRepository';
 import { IUsuarioRepository } from '../../../domain/repositories/IUsuarioRepository';
+import { EntityFinder } from '../../../domain/services/EntityFinder';
+import { EstoqueItemDTO, toEstoqueItemDTO } from '../../dtos/EstoqueItemDTO';
+import { MovimentacaoDTO, toMovimentacaoDTO } from '../../dtos/MovimentacaoDTO';
+import { Actor } from '../auditoria/Actor';
+import { registerAuditSafely } from '../auditoria/registerAuditSafely';
 
 export interface ProcessarEntradaInput {
   produtoId: string;
@@ -17,8 +24,8 @@ export interface ProcessarEntradaInput {
 }
 
 export interface ProcessarEntradaResult {
-  estoqueItem: EstoqueItem;
-  movimentacao: Movimentacao;
+  estoqueItem: EstoqueItemDTO;
+  movimentacao: MovimentacaoDTO;
 }
 
 /** Caso de uso: dar entrada (recebimento) de um produto no estoque. */
@@ -29,20 +36,30 @@ export class ProcessarEntrada {
     private readonly produtos: IProdutoRepository,
     private readonly usuarios: IUsuarioRepository,
     private readonly localizacoes: ILocalizacaoRepository,
+    private readonly auditoria: IAuditTrailRepository,
   ) {}
 
-  async execute(input: ProcessarEntradaInput): Promise<ProcessarEntradaResult> {
-    const produto = await this.produtos.buscarPorId(input.produtoId);
-    if (!produto) throw new DomainError('Produto não encontrado.');
+  async execute(input: ProcessarEntradaInput, actor: Actor): Promise<ProcessarEntradaResult> {
+    const produto = await EntityFinder.findOrThrow(
+      (id) => this.produtos.buscarPorId(id),
+      input.produtoId,
+      'Produto',
+    );
     if (!produto.ativo) throw new DomainError('Produto inativo não pode receber entrada.');
 
-    const usuario = await this.usuarios.buscarPorId(input.usuarioId);
-    if (!usuario) throw new DomainError('Usuário não encontrado.');
+    const usuario = await EntityFinder.findOrThrow(
+      (id) => this.usuarios.buscarPorId(id),
+      input.usuarioId,
+      'Usuário',
+    );
 
     let localizacaoId: string | null = null;
     if (input.localizacaoId) {
-      const localizacao = await this.localizacoes.buscarPorId(input.localizacaoId);
-      if (!localizacao) throw new DomainError('Localização não encontrada.');
+      const localizacao = await EntityFinder.findOrThrow(
+        (id) => this.localizacoes.buscarPorId(id),
+        input.localizacaoId,
+        'Localização',
+      );
       localizacaoId = localizacao.id;
     }
 
@@ -63,6 +80,18 @@ export class ProcessarEntrada {
     });
     await this.movimentacoes.salvar(movimentacao);
 
-    return { estoqueItem, movimentacao };
+    await registerAuditSafely(this.auditoria, {
+      actorUserId: actor.userId,
+      actorLogin: actor.login,
+      operation: AuditOperation.STOCK_MOVE,
+      entityType: 'Estoque',
+      entityId: estoqueItem.id,
+      summary: `Entrada de ${estoqueItem.quantidade} un. do produto ${produto.sku}.`,
+    });
+
+    return {
+      estoqueItem: toEstoqueItemDTO(estoqueItem),
+      movimentacao: toMovimentacaoDTO(movimentacao),
+    };
   }
 }

@@ -1,10 +1,14 @@
 import { Request, Response } from 'express';
 import { casosDeUso } from '../../container';
+import { actorFromRequest } from '../actor';
 
 /** Cadastro / atualização / consulta / status de localizações. */
 export const LocalizacoesController = {
   async criar(req: Request, res: Response): Promise<void> {
-    const localizacao = await casosDeUso.cadastrarLocalizacao.execute(req.body);
+    const localizacao = await casosDeUso.cadastrarLocalizacao.execute(
+      req.body,
+      actorFromRequest(req),
+    );
     res.status(201).json(localizacao);
   },
 
@@ -17,12 +21,20 @@ export const LocalizacoesController = {
   },
 
   async atualizar(req: Request, res: Response): Promise<void> {
-    const localizacao = await casosDeUso.atualizarLocalizacao.execute(req.params.id, req.body);
+    const localizacao = await casosDeUso.atualizarLocalizacao.execute(
+      req.params.id,
+      req.body,
+      actorFromRequest(req),
+    );
     res.json(localizacao);
   },
 
   async alterarStatus(req: Request, res: Response): Promise<void> {
-    const localizacao = await casosDeUso.alterarStatusLocalizacao.execute(req.params.id, req.body);
+    const localizacao = await casosDeUso.alterarStatusLocalizacao.execute(
+      req.params.id,
+      req.body,
+      actorFromRequest(req),
+    );
     res.json(localizacao);
   },
 };
