@@ -11,7 +11,7 @@ A partir desta versão, todas as rotas de `/api` (exceto `/api/login`) exigem um
 | `admin`    | `trocar123` | ADMIN    |
 | `operador` | `trocar123` | OPERADOR |
 
-Essas credenciais são criadas automaticamente na primeira execução, ou já estão presentes no `data/wms-db.json` versionado. As senhas ficam armazenadas como hash bcrypt (`passwordHash`) — o texto puro nunca é persistido.
+Essas credenciais são criadas automaticamente na primeira execução pelo `seed` (o arquivo `data/wms-db.json` **não** é versionado — fica no `.gitignore` e é gerado localmente). As senhas ficam armazenadas como hash bcrypt (`passwordHash`) — o texto puro nunca é persistido.
 
 ### Como fazer login
 
@@ -457,7 +457,42 @@ O sistema deve:
 
 # Descrição das implementações e evolução arquitetural - Sprint 3
 
-## Funcionalidade implementada — Trilha de Auditoria operacional
+## Visão geral
+
+A Sprint 3 entrega **duas novas funcionalidades de domínio**, ambas atravessando
+todas as camadas da Onion, além de melhorias arquiteturais que respondem
+diretamente à avaliação da Sprint 2:
+
+1. **Autenticação e controle de acesso (RBAC)** — login com senha (bcrypt),
+   token de sessão e proteção das rotas por middleware.
+2. **Trilha de auditoria operacional** — registro automático de quem fez o quê,
+   com rota de consulta filtrável restrita a ADMIN.
+
+---
+
+## Funcionalidade 1 — Autenticação e controle de acesso (RBAC)
+
+Substitui o login frágil da Sprint 2 (que validava apenas o login, sem senha e
+sem proteger as rotas). Agora há autenticação real por senha e autorização por
+perfil. Detalhes de uso (request/response) na seção **Autenticação** no topo
+deste README.
+
+- **Entrada verificável**: `POST /api/login` com `login` + `password`.
+- **Processamento / regra de negócio**: `AutenticarUsuario` valida login, compara
+  a senha contra o hash (`IHasher`/`BcryptHasher`), exige usuário ativo e abre a
+  sessão (`ISessionStore`). A força mínima da senha é regra de domínio
+  (`PasswordPolicy`).
+- **Acesso a dados**: `IUsuarioRepository` (busca por login) + `ISessionStore`.
+- **Saída observável**: `200` com `{ token, user }` (sem `passwordHash`); `401`
+  para credenciais inválidas/conta inativa; `403` quando um perfil não-ADMIN
+  tenta uma rota restrita.
+- **Componentes**: `AuthController` → `AutenticarUsuario` →
+  `IHasher`/`ISessionStore`/`IUsuarioRepository`; nas demais rotas,
+  `authenticationMiddleware` e `adminAuthorizationMiddleware`.
+
+---
+
+## Funcionalidade 2 — Trilha de Auditoria operacional
 
 A Sprint 3 adiciona uma **trilha de auditoria** que registra automaticamente
 quem fez o quê no sistema: cada operação relevante (login, cadastro, atualização,
@@ -548,15 +583,36 @@ Um OPERADOR autenticado recebe `403 Forbidden` ao acessar a rota.
 
 ## Melhorias arquiteturais em relação à Sprint 2
 
-- **Portas de domínio**: segurança passou a depender de abstrações
-  (`IHasher`, `ISessionStore`) em `domain/ports`, com implementações concretas
-  (`BcryptHasher`, `InMemorySessionStore`) na infraestrutura — reforçando a
-  inversão de dependência.
-- **Serviços de domínio dedicados** para regras que estavam dispersas:
-  `LastActiveAdminPolicy`, `PasswordPolicy` e `EntityFinder`, aumentando a coesão.
+Cada melhoria abaixo responde a um ponto levantado na **avaliação da Sprint 2**:
+
+| Ponto apontado na Sprint 2 | Correção aplicada na Sprint 3 |
+| --- | --- |
+| "o login só valida o login, sem senha" | Autenticação por senha com hash bcrypt (`AutenticarUsuario` + `IHasher`/`BcryptHasher` + `PasswordPolicy`). |
+| "as rotas da API não parecem protegidas por middleware" | `authenticationMiddleware` (Bearer) em todas as rotas e `adminAuthorizationMiddleware` nas operações restritas. |
+| "a regra do último ADMIN aparece espalhada em mais de um caso de uso" | Regra centralizada no serviço de domínio `LastActiveAdminPolicy`, reutilizado por `AtualizarUsuario` e `AlterarStatusUsuario`. |
+| "`listar()` virou um método faz-tudo / baixa coesão" | `ConsultarEstoqueGeral` agora orquestra a I/O e delega a agregação/enriquecimento/ordenação ao `StockOverviewConsolidator`. |
+| ".claude / node_modules na entrega" | Ambos no `.gitignore` e fora do versionamento. |
+
+Melhorias estruturais adicionais:
+
+- **Portas de domínio** (`IHasher`, `ISessionStore` em `domain/ports`) com
+  implementações concretas na infraestrutura — reforçando a inversão de dependência.
 - **DTOs de aplicação** (`application/dtos`) isolando o que é serializado na borda
   HTTP do modelo de domínio (campos sensíveis como `passwordHash` nunca vazam).
-- **Auditoria como efeito colateral tolerante a falhas**, sem acoplar o caso de
-  uso principal à persistência da trilha.
+- **Auditoria como efeito colateral tolerante a falhas** (`registerAuditSafely`),
+  sem acoplar o caso de uso principal à persistência da trilha.
 - **Padronização de nomenclatura** do domínio em português (remoção das entidades
   e validadores duplicados em inglês), eliminando ambiguidade entre camadas.
+
+---
+
+## Testes automatizados
+
+A suíte (`npm test`, Vitest) cobre o domínio, os serviços extraídos e as duas
+novas funcionalidades:
+
+- **Domínio**: `Usuario`, `Localizacao`, `PoliticaFifo`, `AuditTrailEntry`,
+  `LastActiveAdminPolicy`.
+- **Aplicação**: `AutenticarUsuario` (login/RBAC), `ListAuditTrail` e
+  `registerAuditSafely` (auditoria), `StockOverviewConsolidator`,
+  `AlterarStatusUsuario`, `AlterarStatusLocalizacao`.
