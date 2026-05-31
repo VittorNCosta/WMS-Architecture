@@ -141,3 +141,15 @@ Interfaces e
 repositórios
 separados da
 lógica de negócio
+
+
+
+Requisitos e escopo do sistema
+● Cadastro/ Atualização de produtos.
+● Consulta de produtos.
+● Recebimento/Entrada do estoque.
+● Armazenagem dos itens recebidos.
+● Movimentações e Transferências do estoque.
+● Expedição/Saída do estoque.
+● Rastreabilidade de todas as movimentações, entradas e saídas de saldo.
+● Regras de negócio.(FIFO).
