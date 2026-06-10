@@ -4,7 +4,7 @@
 
 ## O que esta funcionalidade faz
 
-O **Estoque** é a visão de consulta do WMS — não cria nem move nada, apenas **consolida e exibe** o saldo atual. A tela `estoque.html`:
+O **Estoque** é a visão de consulta do WMS — não cria nem move nada, apenas **consolida e exibe** o saldo atual. A tela `stock.html`:
 
 - Lista, agrupado por **localização**, cada **produto** com a **quantidade total** disponível ali (somando todos os recebimentos/lotes daquele produto naquele local).
 - Mostra um **subtotal por localização** e um **Total geral** do armazém no rodapé da tabela.
@@ -29,11 +29,11 @@ O **Estoque** é a visão de consulta do WMS — não cria nem move nada, apenas
 2. **Estar autenticado.** Fluxo:
 
    1. `http://localhost:3333/` → login (`login.html`).
-   2. Login de teste do seed: **`admin`** ou **`operador`** (sem senha).
+   2. Login de teste do seed: **`admin`** ou **`operador`** (senha **`wyms14623`**).
    3. Sucesso → **menu** (`menu.html`).
-   4. No menu, clique no card **Estoque** → `estoque.html`.
+   4. No menu, clique no card **Estoque** → `stock.html`.
 
-   **Guarda de sessão (`sessao.js`):** sem sessão (não logou ou a aba foi fechada/reaberta) a tela **redireciona para o login** (`/`). **Sair** limpa a sessão.
+   **Guarda de sessão (`session.js`):** sem sessão (não logou ou a aba foi fechada/reaberta) a tela **redireciona para o login** (`/`). **Sair** limpa a sessão.
 
 > Esta tela é **somente leitura**: não exige produto, localização ou usuário selecionado. Se ainda não houve nenhum recebimento, ela abre normalmente e mostra o estado vazio.
 
@@ -41,7 +41,7 @@ O **Estoque** é a visão de consulta do WMS — não cria nem move nada, apenas
 
 ## Como usar (passo a passo)
 
-Ao abrir `estoque.html`, a tela já chama `GET /api/estoque` e monta a tabela **Estoque consolidado**. No topo aparece o usuário logado, um link **Menu** e o botão **Sair**.
+Ao abrir `stock.html`, a tela já chama `GET /api/stock` e monta a tabela **Estoque consolidado**. No topo aparece o usuário logado, um link **Menu** e o botão **Sair**.
 
 ### 1. Ler a tabela
 
@@ -74,7 +74,7 @@ Apague o texto do campo para voltar à lista completa.
 
 ### 4. Atualizar
 
-O botão **Atualizar** refaz `GET /api/estoque` (mostra "Atualizando..." enquanto carrega). Use depois de registrar recebimentos/armazenagens em outra aba para ver o saldo novo.
+O botão **Atualizar** refaz `GET /api/stock` (mostra "Atualizando..." enquanto carrega). Use depois de registrar recebimentos/armazenagens em outra aba para ver o saldo novo.
 
 ### 5. Estado vazio
 
@@ -84,51 +84,51 @@ Se não houver **nenhum** item em estoque, a tabela some e aparece **"Nenhum ite
 
 ## Regra de negócio / como o número é calculado
 
-A consolidação é feita no backend pelo caso de uso **`ConsultarEstoqueGeral`** (`application/use-cases/estoque`):
+A consolidação é feita no backend pelo caso de uso **`GetStockOverview`** (`application/use-cases/stock`):
 
-- Lê **todos os `EstoqueItem`** (cada recebimento gera um `EstoqueItem`/lote — ver `docs/recebimento.md`).
+- Lê **todos os `StockItem`** (cada recebimento gera um `StockItem`/lote — ver `docs/recebimento.md`).
 - **Agrupa e soma** todos os lotes que tenham o **mesmo produto + a mesma localização**. Vários recebimentos do mesmo produto na mesma localização viram **uma única linha**, com a quantidade somada.
-- Itens **recebidos e ainda não armazenados** (sem `localizacaoId`) são agrupados sob **`(sem localização)`** — eles existem no estoque, só não têm endereço físico ainda (resolve-se na tela **Armazenagem**, ver `docs/armazenagem.md`).
+- Itens **recebidos e ainda não armazenados** (sem `locationId`) são agrupados sob **`(sem localização)`** — eles existem no estoque, só não têm endereço físico ainda (resolve-se na tela **Armazenagem**, ver `docs/armazenagem.md`).
 - Cada linha é **enriquecida** com `SKU`/`nome` do produto e `código`/`descrição` da localização. Se o produto ou a localização **não tiver cadastro correspondente**, a linha **não quebra**: os campos faltantes vêm como `null` (a tela mostra só o que tem, ou `(sem localização)` / `(desconhecido)`), e **a quantidade continua somando no Total geral**.
-- O **Total geral** (`quantidadeTotalGeral`) é a soma das quantidades de **todos os lotes**, independentemente de o produto/localização estar cadastrado.
+- O **Total geral** (`totalQuantity`) é a soma das quantidades de **todos os lotes**, independentemente de o produto/localização estar cadastrado.
 
-O saldo reflete **entradas** (Recebimento) e **armazenagens** já realizadas, e é reduzido por **saídas** (Expedição com FIFO) e **transferências** entre localizações. Não há arredondamento nem filtro de "ativo" aqui — é o retrato fiel do que está em `EstoqueItem`.
+O saldo reflete **entradas** (Recebimento) e **armazenagens** já realizadas, e é reduzido por **saídas** (Expedição com FIFO) e **transferências** entre localizações. Não há arredondamento nem filtro de "ativo" aqui — é o retrato fiel do que está em `StockItem`.
 
 ---
 
 ## Endpoint da API por trás
 
-Base: `/api`. Esta tela usa apenas **`GET /api/estoque`** (consulta; sem corpo).
+Base: `/api`. Esta tela usa apenas **`GET /api/stock`** (consulta; sem corpo).
 
 | Ação | Método | Caminho | Corpo | Resposta |
 |---|---|---|---|---|
-| Estoque consolidado (geral) | `GET` | `/estoque` | — | `200` + `EstoqueGeralResultado` |
-| Saldo de **um** produto (correlato) | `GET` | `/estoque/:produtoId` | — | `200` + `SaldoConsolidado` |
+| Estoque consolidado (geral) | `GET` | `/stock` | — | `200` + `StockOverviewResult` |
+| Saldo de **um** produto (correlato) | `GET` | `/stock/:productId` | — | `200` + `ConsolidatedBalance` |
 
-Forma da resposta de **`GET /api/estoque`**:
+Forma da resposta de **`GET /api/stock`**:
 
 ```json
 {
-  "itens": [
+  "items": [
     {
-      "produtoId": "…",
-      "produtoSku": "CANETA-AZUL",
-      "produtoNome": "Caneta Azul",
-      "localizacaoId": "…",
-      "localizacaoCodigo": "A-01-01",
-      "localizacaoDescricao": "Rua A, prateleira 01, posição 01",
-      "quantidade": 12
+      "productId": "…",
+      "productSku": "CANETA-AZUL",
+      "productName": "Caneta Azul",
+      "locationId": "…",
+      "locationCode": "A-01-01",
+      "locationDescription": "Rua A, prateleira 01, posição 01",
+      "quantity": 12
     }
   ],
-  "quantidadeTotalGeral": 12,
-  "totalRegistros": 1
+  "totalQuantity": 12,
+  "totalRecords": 1
 }
 ```
 
-- `produtoSku`, `produtoNome`, `localizacaoId`, `localizacaoCodigo`, `localizacaoDescricao` podem vir **`null`** (produto/localização sem cadastro, ou item sem localização). `produtoId` e `quantidade` sempre vêm.
-- `quantidadeTotalGeral` = soma de **todos** os lotes; `totalRegistros` = número de linhas consolidadas (= `itens.length`).
+- `productSku`, `productName`, `locationId`, `locationCode`, `locationDescription` podem vir **`null`** (produto/localização sem cadastro, ou item sem localização). `productId` e `quantity` sempre vêm.
+- `totalQuantity` = soma de **todos** os lotes; `totalRecords` = número de linhas consolidadas (= `items.length`).
 
-> **Funcionalidade correlata — `GET /api/estoque/:produtoId`:** devolve o saldo de **um produto específico** no formato `{ "produtoId", "quantidadeTotal", "porLocalizacao": [ { "localizacaoId", "quantidade" } ] }` (`localizacaoId` é `null` para o saldo "sem localização"). A tela de Estoque **não** usa essa rota — ela existe para consulta técnica individual.
+> **Funcionalidade correlata — `GET /api/stock/:productId`:** devolve o saldo de **um produto específico** no formato `{ "productId", "totalQuantity", "byLocation": [ { "locationId", "quantity" } ] }` (`locationId` é `null` para o saldo "sem localização"). A tela de Estoque **não** usa essa rota — ela existe para consulta técnica individual.
 
 ---
 
@@ -153,11 +153,11 @@ Valores coerentes com o seed (usuários `admin`/`operador`; localizações `DOCA
 **Equivalente via API:**
 
 ```bash
-curl -s localhost:3333/api/estoque
-# -> { "itens": [ ... ], "quantidadeTotalGeral": 12, "totalRegistros": 1 }
+curl -s localhost:3333/api/stock
+# -> { "items": [ ... ], "totalQuantity": 12, "totalRecords": 1 }
 
 # saldo de um produto específico (rota correlata):
-curl -s localhost:3333/api/estoque/PRODUTO_ID   # PRODUTO_ID: GET /api/produtos
+curl -s localhost:3333/api/stock/PRODUTO_ID   # PRODUTO_ID: GET /api/products
 ```
 
 ---
@@ -166,10 +166,10 @@ curl -s localhost:3333/api/estoque/PRODUTO_ID   # PRODUTO_ID: GET /api/produtos
 
 | Mensagem / sintoma | Significado | O que fazer |
 |---|---|---|
-| "Nenhum item em estoque." | Não há nenhum `EstoqueItem` — nenhum recebimento foi feito ainda. | Faça um recebimento em **Recebimento** (ver `docs/recebimento.md`) e clique em **Atualizar**. |
-| Produto aparece em **`(sem localização)`** | O item foi **recebido mas não armazenado** (sem `localizacaoId`). | Endereçe o item na tela **Armazenagem** (ver `docs/armazenagem.md`); depois clique em **Atualizar**. |
+| "Nenhum item em estoque." | Não há nenhum `StockItem` — nenhum recebimento foi feito ainda. | Faça um recebimento em **Recebimento** (ver `docs/recebimento.md`) e clique em **Atualizar**. |
+| Produto aparece em **`(sem localização)`** | O item foi **recebido mas não armazenado** (sem `locationId`). | Endereçe o item na tela **Armazenagem** (ver `docs/armazenagem.md`); depois clique em **Atualizar**. |
 | "Nenhum item corresponde ao filtro informado." | O texto do campo de busca não bate com nenhum produto/localização. | Limpe ou ajuste o termo (a busca é case-insensitive e considera SKU, nome e código/descrição). |
 | A quantidade não bate com o esperado | Recebimento **sem armazenagem** fica em `(sem localização)` (não some com o saldo do local); **saídas/expedição** e **transferências** reduzem/movem o saldo. | Some `(sem localização)` + as localizações; confira movimentações em **Rastreabilidade**; lembre que a Expedição aplica FIFO e baixa o estoque. |
 | Linha com produto/localização "em branco" ou `(desconhecido)` | O produto ou a localização do item não tem cadastro correspondente. | É exibição resiliente (não quebra) — o saldo ainda conta no **Total geral**; verifique o cadastro em **Produtos**/seed de localizações. |
 | A tela abriu e **voltou para o login** | Sem sessão (não logou, ou a aba foi fechada/reaberta — `sessionStorage` é por aba). | Faça login novamente com `admin`/`operador`. |
-| "Falha de conexão ao carregar o estoque." / "Não foi possível carregar o estoque." | A API não respondeu (ou respondeu erro) em `GET /api/estoque`. | Confirme `npm run dev` em `http://localhost:3333/` e clique em **Atualizar**. |
+| "Falha de conexão ao carregar o estoque." / "Não foi possível carregar o estoque." | A API não respondeu (ou respondeu erro) em `GET /api/stock`. | Confirme `npm run dev` em `http://localhost:3333/` e clique em **Atualizar**. |

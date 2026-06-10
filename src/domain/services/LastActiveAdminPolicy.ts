@@ -1,25 +1,25 @@
-import { Usuario } from '../entities/Usuario';
-import { PerfilUsuario } from '../enums/PerfilUsuario';
+import { User } from '../entities/User';
+import { UserRole } from '../enums/UserRole';
 import { DomainError } from '../errors/DomainError';
 
-/** Operações sensíveis que podem deixar o sistema sem nenhum ADMIN ativo. */
+/** Sensitive operations that may leave the system without any active ADMIN. */
 export type LastAdminOperation = 'DEACTIVATE' | 'DEMOTE_FROM_ADMIN';
 
 /**
- * Regra de negócio: o sistema deve ter sempre ao menos um ADMIN ativo.
+ * Business rule: the system must always have at least one active ADMIN.
  *
- * Centraliza a verificação compartilhada por casos de uso que podem
- * remover/inativar o último administrador ativo (atualização de perfil e
- * alteração de status). Função pura de domínio — testável sem repositório.
+ * Centralizes the check shared by use cases that may remove/deactivate the
+ * last active administrator (role update and status change). Pure domain
+ * function — testable without a repository.
  */
 export class LastActiveAdminPolicy {
   static ensureNotLastActiveAdmin(
-    users: Usuario[],
+    users: User[],
     targetUserId: string,
     operation: LastAdminOperation,
   ): void {
     const otherActiveAdmins = users.filter(
-      (u) => u.id !== targetUserId && u.perfil === PerfilUsuario.ADMIN && u.ativo,
+      (u) => u.id !== targetUserId && u.role === UserRole.ADMIN && u.active,
     );
     if (otherActiveAdmins.length === 0) {
       throw new DomainError(messageFor(operation));

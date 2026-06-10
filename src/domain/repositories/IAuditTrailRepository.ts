@@ -1,12 +1,12 @@
 import { AuditTrailEntry } from '../entities/AuditTrailEntry';
 
 /**
- * Contrato de persistência da trilha de auditoria operacional.
- * Implementação concreta vive em `infrastructure/repositories`.
+ * Persistence contract for the operational audit trail.
+ * The concrete implementation lives in `infrastructure/repositories`.
  */
 export interface IAuditTrailRepository {
-  salvar(entry: AuditTrailEntry): Promise<void>;
-  listarTodos(): Promise<AuditTrailEntry[]>;
-  listarPorPeriodo(de: Date, ate: Date): Promise<AuditTrailEntry[]>;
-  listarPorEntidade(entityType: string, entityId: string): Promise<AuditTrailEntry[]>;
+  save(entry: AuditTrailEntry): Promise<void>;
+  listAll(): Promise<AuditTrailEntry[]>;
+  listByPeriod(from: Date, to: Date): Promise<AuditTrailEntry[]>;
+  listByEntity(entityType: string, entityId: string): Promise<AuditTrailEntry[]>;
 }

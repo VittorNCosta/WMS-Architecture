@@ -4,11 +4,11 @@
 
 ## O que esta funcionalidade faz
 
-O **produto** é o item base de todo o sistema. Sem um produto cadastrado e **ativo** não é possível dar entrada (recebimento) nem armazenar nada. Esta tela cobre, em um único lugar (`produtos.html`):
+O **produto** é o item base de todo o sistema. Sem um produto cadastrado e **ativo** não é possível dar entrada (recebimento) nem armazenar nada. Esta tela cobre, em um único lugar (`products.html`):
 
 - **Cadastro** — criar um novo produto com SKU único.
 - **Consulta / listagem** — ver todos os produtos cadastrados e a situação (Ativo/Inativo) de cada um.
-- **Atualização / inativação** — editar nome, descrição, unidade de medida e ligar/desligar o produto (`ativo`).
+- **Atualização / inativação** — editar nome, descrição, unidade de medida e ligar/desligar o produto (`active`).
 
 O SKU é o identificador de negócio do produto e **não pode ser alterado** depois de criado.
 
@@ -28,17 +28,17 @@ O SKU é o identificador de negócio do produto e **não pode ser alterado** dep
 2. **Estar autenticado.** O fluxo é:
 
    1. Abra `http://localhost:3333/` — cai na tela de login (`login.html`).
-   2. Informe um login de teste do seed: **`admin`** ou **`operador`** (este sistema autentica só pelo login, sem senha).
+   2. Informe um login de teste do seed: **`admin`** ou **`operador`** (senha **`wyms14623`**).
    3. No sucesso você é redirecionado para o **menu** (`menu.html`).
-   4. No menu, clique em **Produtos** para abrir `produtos.html`.
+   4. No menu, clique em **Produtos** para abrir `products.html`.
 
-> **Guarda de sessão:** ao entrar, os dados públicos do usuário (`id`, `nome`, `login`, `perfil`) são gravados em `sessionStorage` (chave `wms_usuario`). Toda tela protegida chama `exigirSessao()` de `sessao.js` no carregamento. Se **não houver sessão** (ainda não logou, ou a aba foi fechada e reaberta), a tela **redireciona automaticamente para o login** (`/`). O botão **Sair** limpa a sessão e volta ao login.
+> **Guarda de sessão:** ao entrar, os dados públicos do usuário (`id`, `name`, `login`, `role`) são gravados em `sessionStorage` (chave `wms_user`). Toda tela protegida chama `requireSession()` de `session.js` no carregamento. Se **não houver sessão** (ainda não logou, ou a aba foi fechada e reaberta), a tela **redireciona automaticamente para o login** (`/`). O botão **Sair** limpa a sessão e volta ao login.
 
 ---
 
 ## Como usar (passo a passo)
 
-A tela `produtos.html` tem três seções: **Cadastrar produto**, **Atualizar produto** (oculta até você clicar em "Editar") e **Produtos cadastrados** (tabela). No topo aparece o usuário logado, um link **Menu** e o botão **Sair**.
+A tela `products.html` tem três seções: **Cadastrar produto**, **Atualizar produto** (oculta até você clicar em "Editar") e **Produtos cadastrados** (tabela). No topo aparece o usuário logado, um link **Menu** e o botão **Sair**.
 
 ### 1. Cadastrar um produto
 
@@ -54,13 +54,13 @@ Na seção **Cadastrar produto**, preencha:
 Clique em **Cadastrar**. O que acontece:
 
 - A tela valida no navegador que SKU, Nome e Unidade de medida não estão vazios (mensagem de erro em vermelho se algum faltar).
-- Envia `POST /api/produtos`.
+- Envia `POST /api/products`.
 - **Sucesso:** aparece uma mensagem verde "Produto cadastrado", o formulário é limpo e a **tabela é recarregada** com o novo produto (já entra como **Ativo**).
 - **Erro:** aparece uma mensagem vermelha com o texto vindo do backend (ex.: SKU duplicado — ver Regras e Solução de problemas).
 
 ### 2. Consultar / listar produtos
 
-A seção **Produtos cadastrados** carrega automaticamente ao abrir a tela (e a cada cadastro/atualização) via `GET /api/produtos`. A tabela mostra, por produto:
+A seção **Produtos cadastrados** carrega automaticamente ao abrir a tela (e a cada cadastro/atualização) via `GET /api/products`. A tabela mostra, por produto:
 
 - **SKU**
 - **Nome**
@@ -84,7 +84,7 @@ Se não houver nenhum produto, aparece a mensagem "Nenhum produto cadastrado ain
    | **Unidade de medida** | Sim | |
    | **Produto ativo** | — | Caixa de seleção. **Desmarque para inativar** o produto. |
 
-4. Clique em **Salvar alterações** (`PUT /api/produtos/:id`).
+4. Clique em **Salvar alterações** (`PUT /api/products/:id`).
    - **Sucesso:** mensagem verde "Produto atualizado", o formulário de edição fecha e a tabela é recarregada (a Situação reflete o novo estado).
    - **Erro:** mensagem vermelha com o texto do backend.
 5. **Cancelar** fecha a edição sem enviar nada.
@@ -95,9 +95,9 @@ Se não houver nenhum produto, aparece a mensagem "Nenhum produto cadastrado ain
 
 ## Regras de negócio e validações
 
-Validadas no backend (camada de domínio/aplicação). Qualquer regra violada retorna **HTTP 422** com corpo `{ "erro": "mensagem" }`, exibido na tela em vermelho.
+Validadas no backend (camada de domínio/aplicação). Qualquer regra violada retorna **HTTP 422** com corpo `{ "error": "mensagem" }`, exibido na tela em vermelho.
 
-**Cadastro (`CadastrarProduto` / entidade `Produto`):**
+**Cadastro (`CreateProduct` / entidade `Product`):**
 
 - **SKU** — obrigatório (texto não vazio) **e único**. Se já existir produto com o mesmo SKU: `Já existe um produto com o SKU "<sku>".`
 - **Nome** — obrigatório (texto não vazio).
@@ -105,12 +105,12 @@ Validadas no backend (camada de domínio/aplicação). Qualquer regra violada re
 - **Descrição** — opcional; vazio é tratado como "sem descrição".
 - Todo produto novo nasce **ativo**.
 
-**Atualização (`AtualizarProduto`):**
+**Atualização (`UpdateProduct`):**
 
 - O produto precisa **existir** (busca por `id`). Se não existir: `Produto não encontrado.`
 - **Nome** e **Unidade de medida**, quando enviados, não podem ser vazios.
 - **Descrição** pode ser esvaziada.
-- **ativo** só muda se vier um booleano (a tela sempre envia `true`/`false` conforme a caixa de seleção).
+- **active** só muda se vier um booleano (a tela sempre envia `true`/`false` conforme a caixa de seleção).
 - O **SKU não é alterável** pela atualização.
 
 > Mensagens base dos validadores: `SKU do produto é obrigatório.`, `Nome do produto é obrigatório.`, `Unidade de medida é obrigatório.`
@@ -119,18 +119,18 @@ Validadas no backend (camada de domínio/aplicação). Qualquer regra violada re
 
 ## Endpoints da API por trás
 
-Base: `/api`. Erros de regra: **422** `{ "erro": "..." }`.
+Base: `/api`. Erros de regra: **422** `{ "error": "..." }`.
 
 | Ação | Método | Caminho | Corpo (JSON) | Resposta |
 |---|---|---|---|---|
-| Cadastrar | `POST` | `/produtos` | `{ "sku", "nome", "unidadeMedida", "descricao"? }` | `201` + Produto |
-| Listar | `GET` | `/produtos` | — | `200` + `Produto[]` |
-| Consultar 1 | `GET` | `/produtos/:id` | — | `200` + Produto / `422` se não existir |
-| Atualizar | `PUT` | `/produtos/:id` | `{ "nome"?, "descricao"?, "unidadeMedida"?, "ativo"? }` | `200` + Produto / `422` |
+| Cadastrar | `POST` | `/products` | `{ "sku", "name", "unitOfMeasure", "description"? }` | `201` + Product |
+| Listar | `GET` | `/products` | — | `200` + `Product[]` |
+| Consultar 1 | `GET` | `/products/:id` | — | `200` + Product / `422` se não existir |
+| Atualizar | `PUT` | `/products/:id` | `{ "name"?, "description"?, "unitOfMeasure"?, "active"? }` | `200` + Product / `422` |
 
-Forma do objeto **Produto** retornado: `id`, `sku`, `nome`, `descricao` (ou `null`), `unidadeMedida`, `ativo`, `criadoEm`, `atualizadoEm`.
+Forma do objeto **Product** retornado: `id`, `sku`, `name`, `description` (ou `null`), `unitOfMeasure`, `active`, `createdAt`, `updatedAt`.
 
-> A tela usa apenas `POST /api/produtos`, `GET /api/produtos` e `PUT /api/produtos/:id`. O `GET /api/produtos/:id` existe na API para consulta técnica individual.
+> A tela usa apenas `POST /api/products`, `GET /api/products` e `PUT /api/products/:id`. O `GET /api/products/:id` existe na API para consulta técnica individual.
 
 ---
 
@@ -153,9 +153,9 @@ Valores coerentes com o seed (usuários `admin`/`operador`; localizações `DOCA
 **Equivalente via API (cadastro):**
 
 ```bash
-curl -s -X POST localhost:3333/api/produtos \
+curl -s -X POST localhost:3333/api/products \
   -H 'Content-Type: application/json' \
-  -d '{"sku":"CANETA-AZUL","nome":"Caneta Azul","unidadeMedida":"UN","descricao":"Caneta esferográfica azul 1.0mm"}'
+  -d '{"sku":"CANETA-AZUL","name":"Caneta Azul","unitOfMeasure":"UN","description":"Caneta esferográfica azul 1.0mm"}'
 ```
 
 ---

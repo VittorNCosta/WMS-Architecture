@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { IHasher } from '../../domain/ports/IHasher';
 
-/** Implementação de IHasher usando bcryptjs (puro JS, sem dependências nativas). */
+/** IHasher implementation using bcryptjs (pure JS, no native dependencies). */
 export class BcryptHasher implements IHasher {
   constructor(private readonly rounds: number = 10) {}
 

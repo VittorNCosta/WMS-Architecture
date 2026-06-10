@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 
-/** Encaminha erros de handlers assíncronos para o middleware de erro do Express 4. */
+/** Forwards errors from async handlers to the Express 4 error middleware. */
 export const asyncHandler =
   (fn: RequestHandler): RequestHandler =>
   (req, res, next) => {

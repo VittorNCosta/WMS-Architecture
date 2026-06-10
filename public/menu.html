@@ -7,18 +7,18 @@
   <title>WMS — Menu Principal</title>
   <style>
     :root {
-      --verde-escuro: #2e7d32;
-      --verde-escuro-hover: #1b5e20;
-      --verde-claro: #4caf50;
-      --branco: #ffffff;
-      --cinza-borda: #cfd8dc;
-      --cinza-texto: #5f6b6d;
-      --texto-escuro: #1c2526;
-      --erro-bg: #fdecea;
-      --erro-borda: #f5c6cb;
-      --erro-texto: #b71c1c;
-      --sucesso-bg: #e8f5e9;
-      --sucesso-borda: #a5d6a7;
+      --dark-green: #2e7d32;
+      --dark-green-hover: #1b5e20;
+      --light-green: #4caf50;
+      --white: #ffffff;
+      --border-gray: #cfd8dc;
+      --text-gray: #5f6b6d;
+      --dark-text: #1c2526;
+      --error-bg: #fdecea;
+      --error-border: #f5c6cb;
+      --error-text: #b71c1c;
+      --success-bg: #e8f5e9;
+      --success-border: #a5d6a7;
     }
 
     * {
@@ -29,8 +29,8 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--branco);
-      color: var(--texto-escuro);
+      background: var(--white);
+      color: var(--dark-text);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -39,7 +39,7 @@
     }
 
     .card {
-      background: var(--branco);
+      background: var(--white);
       width: 100%;
       max-width: 620px;
       border-radius: 14px;
@@ -48,8 +48,8 @@
     }
 
     .card__header {
-      background: linear-gradient(135deg, var(--verde-escuro), var(--verde-claro));
-      color: var(--branco);
+      background: linear-gradient(135deg, var(--dark-green), var(--light-green));
+      color: var(--white);
       padding: 2rem 1.75rem 1.75rem;
       text-align: center;
     }
@@ -77,105 +77,105 @@
       padding: 1.75rem;
     }
 
-    .saudacao {
+    .greeting {
       font-size: 1rem;
-      color: var(--texto-escuro);
+      color: var(--dark-text);
       margin-bottom: 1.4rem;
       padding: 0.85rem 1rem;
-      background: var(--sucesso-bg);
-      border: 1.5px solid var(--sucesso-borda);
+      background: var(--success-bg);
+      border: 1.5px solid var(--success-border);
       border-radius: 8px;
     }
 
-    .saudacao strong {
-      color: var(--verde-escuro-hover);
+    .greeting strong {
+      color: var(--dark-green-hover);
     }
 
-    .grade {
+    .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1rem;
       margin-bottom: 1.5rem;
     }
 
-    .atalho {
+    .shortcut {
       display: block;
       text-decoration: none;
-      color: var(--texto-escuro);
-      border: 1.5px solid var(--cinza-borda);
+      color: var(--dark-text);
+      border: 1.5px solid var(--border-gray);
       border-radius: 10px;
       padding: 1.1rem 1.15rem;
       transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
-      background: var(--branco);
+      background: var(--white);
     }
 
-    .atalho:hover {
-      border-color: var(--verde-claro);
+    .shortcut:hover {
+      border-color: var(--light-green);
       box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.18);
     }
 
-    .atalho:active {
+    .shortcut:active {
       transform: translateY(1px);
     }
 
-    .atalho__titulo {
+    .shortcut__title {
       font-size: 1.05rem;
       font-weight: 700;
-      color: var(--verde-escuro);
+      color: var(--dark-green);
       margin-bottom: 0.3rem;
     }
 
-    .atalho__descricao {
+    .shortcut__description {
       font-size: 0.85rem;
-      color: var(--cinza-texto);
+      color: var(--text-gray);
       line-height: 1.4;
     }
 
-    .botao {
+    .button {
       width: 100%;
       padding: 0.8rem 1rem;
       font-size: 1rem;
       font-weight: 700;
-      color: var(--branco);
-      background: var(--verde-escuro);
+      color: var(--white);
+      background: var(--dark-green);
       border: none;
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.15s ease, transform 0.05s ease;
     }
 
-    .botao:hover {
-      background: var(--verde-escuro-hover);
+    .button:hover {
+      background: var(--dark-green-hover);
     }
 
-    .botao:active {
+    .button:active {
       transform: translateY(1px);
     }
 
-    .botao--secundario {
-      background: var(--branco);
-      color: var(--verde-escuro);
-      border: 1.5px solid var(--cinza-borda);
+    .button--secondary {
+      background: var(--white);
+      color: var(--dark-green);
+      border: 1.5px solid var(--border-gray);
     }
 
-    .botao--secundario:hover {
+    .button--secondary:hover {
       background: #f4f6f6;
-      color: var(--verde-escuro-hover);
+      color: var(--dark-green-hover);
     }
 
-    .rodape {
+    .footer {
       text-align: center;
       margin-top: 1.25rem;
       font-size: 0.8rem;
     }
 
-    .rodape a {
-      color: var(--verde-escuro);
+    .footer a {
+      color: var(--dark-green);
       text-decoration: none;
       font-weight: 600;
     }
 
-    .rodape a:hover {
+    .footer a:hover {
       text-decoration: underline;
     }
 
@@ -183,7 +183,7 @@
       .card__header { padding: 1.5rem 1.25rem; }
       .card__body { padding: 1.5rem 1.25rem; }
       .card__title { font-size: 1.2rem; }
-      .grade { grid-template-columns: 1fr; }
+      .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -200,65 +200,73 @@
     </header>
 
     <div class="card__body">
-      <p id="saudacao" class="saudacao" role="status" aria-live="polite"></p>
+      <p id="greeting" class="greeting" role="status" aria-live="polite"></p>
 
-      <nav class="grade" aria-label="Funcionalidades do sistema">
-        <a class="atalho" href="produtos.html">
-          <span class="atalho__titulo">Produtos</span>
-          <span class="atalho__descricao">Cadastrar, consultar e atualizar produtos do catálogo.</span>
+      <nav class="grid" aria-label="Funcionalidades do sistema">
+        <a class="shortcut" href="products.html">
+          <span class="shortcut__title">Produtos</span>
+          <span class="shortcut__description">Cadastrar, consultar e atualizar produtos do catálogo.</span>
         </a>
-        <a class="atalho" href="recebimento.html">
-          <span class="atalho__titulo">Recebimento</span>
-          <span class="atalho__descricao">Dar entrada de itens no estoque (recebimento).</span>
+        <a class="shortcut" href="receiving.html">
+          <span class="shortcut__title">Recebimento</span>
+          <span class="shortcut__description">Dar entrada de itens no estoque (recebimento).</span>
         </a>
-        <a class="atalho" href="armazenagem.html">
-          <span class="atalho__titulo">Armazenagem</span>
-          <span class="atalho__descricao">Armazenar itens recebidos em uma localização.</span>
+        <a class="shortcut" href="putaway.html">
+          <span class="shortcut__title">Armazenagem</span>
+          <span class="shortcut__description">Armazenar itens recebidos em uma localização.</span>
         </a>
-        <a class="atalho" href="estoque.html">
-          <span class="atalho__titulo">Estoque</span>
-          <span class="atalho__descricao">Visão consolidada do estoque por localização e produto.</span>
+        <a class="shortcut" href="transfers.html">
+          <span class="shortcut__title">Movimentações</span>
+          <span class="shortcut__description">Transferir saldo de um produto entre localizações.</span>
         </a>
-        <a class="atalho" href="rastreabilidade.html">
-          <span class="atalho__titulo">Rastreabilidade</span>
-          <span class="atalho__descricao">Histórico completo de movimentações (entrada, saída, transferência, armazenagem, ajuste).</span>
+        <a class="shortcut" href="shipping.html">
+          <span class="shortcut__title">Expedição</span>
+          <span class="shortcut__description">Dar saída de itens do estoque (retira saldo).</span>
         </a>
-        <a class="atalho" href="usuarios.html">
-          <span class="atalho__titulo">Usuários</span>
-          <span class="atalho__descricao">Cadastrar, editar e gerenciar perfis e situação dos usuários.</span>
+        <a class="shortcut" href="stock.html">
+          <span class="shortcut__title">Estoque</span>
+          <span class="shortcut__description">Visão consolidada do estoque por localização e produto.</span>
+        </a>
+        <a class="shortcut" href="traceability.html">
+          <span class="shortcut__title">Rastreabilidade</span>
+          <span class="shortcut__description">Histórico completo de movimentações (entrada, saída, transferência, armazenagem, ajuste).</span>
+        </a>
+        <a class="shortcut" href="users.html">
+          <span class="shortcut__title">Usuários</span>
+          <span class="shortcut__description">Cadastrar, editar e gerenciar perfis e situação dos usuários.</span>
         </a>
       </nav>
 
-      <button class="botao botao--secundario" type="button" id="botaoSair">Sair</button>
+      <button class="button button--secondary" type="button" id="logoutButton">Sair</button>
 
-      <p class="rodape">
+      <p class="footer">
         <a href="/status">Ver status do serviço</a>
       </p>
     </div>
   </main>
 
-  <script src="sessao.js"></script>
+  <script src="session.js"></script>
   <script>
     (function () {
       'use strict';
 
-      var usuario = exigirSessao();
-      if (!usuario) {
+      var user = requireSession();
+      if (!user) {
         throw new Error('sem sessão');
       }
 
-      function escaparHtml(texto) {
+      function escapeHtml(text) {
         var div = document.createElement('div');
-        div.textContent = texto == null ? '' : String(texto);
+        div.textContent = text == null ? '' : String(text);
         return div.innerHTML;
       }
 
-      document.getElementById('saudacao').innerHTML =
-        'Bem-vindo, <strong>' + escaparHtml(usuario.nome) +
-        '</strong> (' + escaparHtml(usuario.perfil) + ')';
+      document.getElementById('greeting').innerHTML =
+        'Bem-vindo, <strong>' + escapeHtml(user.name) +
+        '</strong> (' + escapeHtml(user.role) + ')';
 
-      document.getElementById('botaoSair').addEventListener('click', function () {
-        sair();
+      document.getElementById('logoutButton').addEventListener('click', function () {
+        logout();
       });
     })();
   </script>

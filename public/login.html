@@ -7,18 +7,18 @@
   <title>WMS — Acesso ao Sistema</title>
   <style>
     :root {
-      --verde-escuro: #2e7d32;
-      --verde-escuro-hover: #1b5e20;
-      --verde-claro: #4caf50;
-      --branco: #ffffff;
-      --cinza-borda: #cfd8dc;
-      --cinza-texto: #5f6b6d;
-      --texto-escuro: #1c2526;
-      --erro-bg: #fdecea;
-      --erro-borda: #f5c6cb;
-      --erro-texto: #b71c1c;
-      --sucesso-bg: #e8f5e9;
-      --sucesso-borda: #a5d6a7;
+      --dark-green: #2e7d32;
+      --dark-green-hover: #1b5e20;
+      --light-green: #4caf50;
+      --white: #ffffff;
+      --border-gray: #cfd8dc;
+      --text-gray: #5f6b6d;
+      --dark-text: #1c2526;
+      --error-bg: #fdecea;
+      --error-border: #f5c6cb;
+      --error-text: #b71c1c;
+      --success-bg: #e8f5e9;
+      --success-border: #a5d6a7;
     }
 
     * {
@@ -29,8 +29,8 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--branco);
-      color: var(--texto-escuro);
+      background: var(--white);
+      color: var(--dark-text);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -39,7 +39,7 @@
     }
 
     .card {
-      background: var(--branco);
+      background: var(--white);
       width: 100%;
       max-width: 420px;
       border-radius: 14px;
@@ -48,8 +48,8 @@
     }
 
     .card__header {
-      background: linear-gradient(135deg, var(--verde-escuro), var(--verde-claro));
-      color: var(--branco);
+      background: linear-gradient(135deg, var(--dark-green), var(--light-green));
+      color: var(--white);
       padding: 2rem 1.75rem 1.75rem;
       text-align: center;
     }
@@ -77,74 +77,74 @@
       padding: 1.75rem;
     }
 
-    .campo {
+    .field {
       margin-bottom: 1.15rem;
     }
 
-    .campo__label {
+    .field__label {
       display: block;
       font-size: 0.85rem;
       font-weight: 600;
-      color: var(--texto-escuro);
+      color: var(--dark-text);
       margin-bottom: 0.4rem;
     }
 
-    .campo__input {
+    .field__input {
       width: 100%;
       padding: 0.7rem 0.85rem;
       font-size: 1rem;
-      color: var(--texto-escuro);
-      border: 1.5px solid var(--cinza-borda);
+      color: var(--dark-text);
+      border: 1.5px solid var(--border-gray);
       border-radius: 8px;
-      background: var(--branco);
+      background: var(--white);
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .campo__input:focus {
+    .field__input:focus {
       outline: none;
-      border-color: var(--verde-claro);
+      border-color: var(--light-green);
       box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.22);
     }
 
-    .campo__input:disabled {
+    .field__input:disabled {
       background: #f4f6f6;
       color: #9aa5a6;
       cursor: not-allowed;
     }
 
-    .campo__ajuda {
+    .field__help {
       margin-top: 0.35rem;
       font-size: 0.78rem;
-      color: var(--cinza-texto);
+      color: var(--text-gray);
     }
 
-    .botao {
+    .button {
       width: 100%;
       padding: 0.8rem 1rem;
       font-size: 1rem;
       font-weight: 700;
-      color: var(--branco);
-      background: var(--verde-escuro);
+      color: var(--white);
+      background: var(--dark-green);
       border: none;
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.15s ease, transform 0.05s ease;
     }
 
-    .botao:hover {
-      background: var(--verde-escuro-hover);
+    .button:hover {
+      background: var(--dark-green-hover);
     }
 
-    .botao:active {
+    .button:active {
       transform: translateY(1px);
     }
 
-    .botao:disabled {
+    .button:disabled {
       background: #9aa5a6;
       cursor: progress;
     }
 
-    .mensagem {
+    .message {
       margin-bottom: 1.1rem;
       padding: 0.75rem 0.9rem;
       border-radius: 8px;
@@ -153,39 +153,39 @@
       display: none;
     }
 
-    .mensagem--erro {
+    .message--error {
       display: block;
-      background: var(--erro-bg);
-      border-color: var(--erro-borda);
-      color: var(--erro-texto);
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error-text);
     }
 
-    .mensagem--sucesso {
+    .message--success {
       display: block;
-      background: var(--sucesso-bg);
-      border-color: var(--sucesso-borda);
-      color: var(--verde-escuro-hover);
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--dark-green-hover);
     }
 
-    .mensagem--sucesso strong {
+    .message--success strong {
       display: block;
       font-size: 1rem;
       margin-bottom: 0.15rem;
     }
 
-    .rodape {
+    .footer {
       text-align: center;
       margin-top: 1.25rem;
       font-size: 0.8rem;
     }
 
-    .rodape a {
-      color: var(--verde-escuro);
+    .footer a {
+      color: var(--dark-green);
       text-decoration: none;
       font-weight: 600;
     }
 
-    .rodape a:hover {
+    .footer a:hover {
       text-decoration: underline;
     }
 
@@ -209,13 +209,13 @@
     </header>
 
     <div class="card__body">
-      <div id="mensagem" class="mensagem" role="alert" aria-live="polite"></div>
+      <div id="message" class="message" role="alert" aria-live="polite"></div>
 
-      <form id="formLogin" novalidate>
-        <div class="campo">
-          <label class="campo__label" for="login">Login</label>
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="login">Login</label>
           <input
-            class="campo__input"
+            class="field__input"
             type="text"
             id="login"
             name="login"
@@ -223,26 +223,26 @@
             placeholder="Use: admin ou operador"
             autofocus
           />
-          <p class="campo__ajuda">Usuários de teste disponíveis: <strong>admin</strong> ou <strong>operador</strong>.</p>
+          <p class="field__help">Usuários de teste disponíveis: <strong>admin</strong> ou <strong>operador</strong>.</p>
         </div>
 
-        <div class="campo">
-          <label class="campo__label" for="senha">Senha</label>
+        <div class="field">
+          <label class="field__label" for="password">Senha</label>
           <input
-            class="campo__input"
+            class="field__input"
             type="password"
-            id="senha"
-            name="senha"
-            placeholder="Não utilizada neste sistema"
-            disabled
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            placeholder="Senha do usuário"
           />
-          <p class="campo__ajuda">Este sistema autentica somente pelo login (sem senha).</p>
+          <p class="field__help">Senha padrão dos usuários de teste: <strong>wyms14623</strong>.</p>
         </div>
 
-        <button class="botao" type="submit" id="botaoEntrar">Entrar</button>
+        <button class="button" type="submit" id="loginButton">Entrar</button>
       </form>
 
-      <p class="rodape">
+      <p class="footer">
         <a href="/status">Ver status do serviço</a>
       </p>
     </div>
@@ -252,76 +252,86 @@
     (function () {
       'use strict';
 
-      var form = document.getElementById('formLogin');
-      var campoLogin = document.getElementById('login');
-      var caixaMensagem = document.getElementById('mensagem');
-      var botaoEntrar = document.getElementById('botaoEntrar');
+      var form = document.getElementById('loginForm');
+      var loginField = document.getElementById('login');
+      var passwordField = document.getElementById('password');
+      var messageBox = document.getElementById('message');
+      var loginButton = document.getElementById('loginButton');
 
-      function exibirMensagem(tipo, htmlConteudo) {
-        caixaMensagem.className = 'mensagem mensagem--' + tipo;
-        caixaMensagem.innerHTML = htmlConteudo;
+      function showMessage(type, htmlContent) {
+        messageBox.className = 'message message--' + type;
+        messageBox.innerHTML = htmlContent;
       }
 
-      function limparMensagem() {
-        caixaMensagem.className = 'mensagem';
-        caixaMensagem.innerHTML = '';
+      function clearMessage() {
+        messageBox.className = 'message';
+        messageBox.innerHTML = '';
       }
 
-      function escaparHtml(texto) {
+      function escapeHtml(text) {
         var div = document.createElement('div');
-        div.textContent = texto == null ? '' : String(texto);
+        div.textContent = text == null ? '' : String(text);
         return div.innerHTML;
       }
 
-      form.addEventListener('submit', function (evento) {
-        evento.preventDefault();
-        limparMensagem();
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        clearMessage();
 
-        var login = campoLogin.value.trim();
+        var login = loginField.value.trim();
+        var password = passwordField.value;
         if (login === '') {
-          exibirMensagem('erro', 'Informe o login para continuar.');
-          campoLogin.focus();
+          showMessage('error', 'Informe o login para continuar.');
+          loginField.focus();
+          return;
+        }
+        if (password === '') {
+          showMessage('error', 'Informe a senha para continuar.');
+          passwordField.focus();
           return;
         }
 
-        botaoEntrar.disabled = true;
-        botaoEntrar.textContent = 'Entrando...';
+        loginButton.disabled = true;
+        loginButton.textContent = 'Entrando...';
 
         fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ login: login })
+          body: JSON.stringify({ login: login, password: password })
         })
-          .then(function (resposta) {
-            return resposta.json().then(function (dados) {
-              return { ok: resposta.ok, dados: dados };
+          .then(function (response) {
+            return response.json().then(function (data) {
+              return { ok: response.ok, data: data };
             });
           })
-          .then(function (resultado) {
-            if (!resultado.ok) {
-              var msgErro = (resultado.dados && (resultado.dados.erro || resultado.dados.message))
+          .then(function (result) {
+            if (!result.ok) {
+              var errorMsg = (result.data && (result.data.error || result.data.message))
                 || 'Não foi possível autenticar. Tente novamente.';
-              exibirMensagem('erro', escaparHtml(msgErro));
+              showMessage('error', escapeHtml(errorMsg));
               return;
             }
 
-            var u = resultado.dados;
-            exibirMensagem(
-              'sucesso',
-              '<strong>Bem-vindo, ' + escaparHtml(u.nome) + ' (' + escaparHtml(u.perfil) + ')</strong>' +
+            var u = result.data.user || result.data;
+            showMessage(
+              'success',
+              '<strong>Bem-vindo, ' + escapeHtml(u.name) + ' (' + escapeHtml(u.role) + ')</strong>' +
               'Acesso liberado ao WMS. Redirecionando...'
             );
             form.reset();
-            sessionStorage.setItem('wms_usuario', JSON.stringify(u));
+            sessionStorage.setItem('wms_user', JSON.stringify(u));
+            if (result.data.token) {
+              sessionStorage.setItem('wms_token', result.data.token);
+            }
             window.location.href = 'menu.html';
             return;
           })
           .catch(function () {
-            exibirMensagem('erro', 'Falha de conexão com o servidor. Verifique sua rede e tente novamente.');
+            showMessage('error', 'Falha de conexão com o servidor. Verifique sua rede e tente novamente.');
           })
           .finally(function () {
-            botaoEntrar.disabled = false;
-            botaoEntrar.textContent = 'Entrar';
+            loginButton.disabled = false;
+            loginButton.textContent = 'Entrar';
           });
       });
     })();

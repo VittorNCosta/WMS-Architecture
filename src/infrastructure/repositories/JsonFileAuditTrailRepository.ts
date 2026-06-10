@@ -4,23 +4,23 @@ import { IAuditTrailRepository } from '../../domain/repositories/IAuditTrailRepo
 import { AuditTrailRow, JsonDatabase } from '../persistence/JsonDatabase';
 
 /**
- * Persistência da trilha de auditoria em arquivo JSON.
+ * Audit trail persistence in a JSON file.
  *
- * Mesmo padrão dos demais JsonFile*Repository: o repositório conhece a
- * entidade do domínio e a "linha" persistida; o domínio nunca conhece o JSON.
+ * Same pattern as the other JsonFile*Repository: the repository knows the
+ * domain entity and the persisted "row"; the domain never knows the JSON.
  *
- * Listagens são sempre devolvidas em ordem decrescente por `occurredAt`, o que
- * dá ao caller (ex.: `ListAuditTrail`) o resultado já cronologicamente correto
- * sem precisar reordenar duas vezes.
+ * Listings are always returned in descending order by `occurredAt`, which
+ * gives the caller (e.g. `ListAuditTrail`) the chronologically correct result
+ * without reordering twice.
  */
 export class JsonFileAuditTrailRepository implements IAuditTrailRepository {
   constructor(private readonly db: JsonDatabase) {}
 
-  private get linhas(): AuditTrailRow[] {
-    return this.db.tabela('auditoria');
+  private get rows(): AuditTrailRow[] {
+    return this.db.table('audit');
   }
 
-  private paraRow(e: AuditTrailEntry): AuditTrailRow {
+  private toRow(e: AuditTrailEntry): AuditTrailRow {
     return {
       id: e.id,
       occurredAt: e.occurredAt.toISOString(),
@@ -33,7 +33,7 @@ export class JsonFileAuditTrailRepository implements IAuditTrailRepository {
     };
   }
 
-  private paraEntidade(r: AuditTrailRow): AuditTrailEntry {
+  private toEntity(r: AuditTrailRow): AuditTrailEntry {
     return new AuditTrailEntry(
       r.id,
       new Date(r.occurredAt),
@@ -46,35 +46,35 @@ export class JsonFileAuditTrailRepository implements IAuditTrailRepository {
     );
   }
 
-  private ordenarDesc(itens: AuditTrailEntry[]): AuditTrailEntry[] {
-    return [...itens].sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime());
+  private sortDesc(items: AuditTrailEntry[]): AuditTrailEntry[] {
+    return [...items].sort((a, b) => b.occurredAt.getTime() - a.occurredAt.getTime());
   }
 
-  async salvar(entry: AuditTrailEntry): Promise<void> {
-    this.linhas.push(this.paraRow(entry));
-    this.db.salvar();
+  async save(entry: AuditTrailEntry): Promise<void> {
+    this.rows.push(this.toRow(entry));
+    this.db.save();
   }
 
-  async listarTodos(): Promise<AuditTrailEntry[]> {
-    return this.ordenarDesc(this.linhas.map((r) => this.paraEntidade(r)));
+  async listAll(): Promise<AuditTrailEntry[]> {
+    return this.sortDesc(this.rows.map((r) => this.toEntity(r)));
   }
 
-  async listarPorPeriodo(de: Date, ate: Date): Promise<AuditTrailEntry[]> {
-    const desde = de.getTime();
-    const ateMs = ate.getTime();
-    const filtradas = this.linhas
-      .map((r) => this.paraEntidade(r))
+  async listByPeriod(from: Date, to: Date): Promise<AuditTrailEntry[]> {
+    const fromMs = from.getTime();
+    const toMs = to.getTime();
+    const filtered = this.rows
+      .map((r) => this.toEntity(r))
       .filter((e) => {
         const t = e.occurredAt.getTime();
-        return t >= desde && t <= ateMs;
+        return t >= fromMs && t <= toMs;
       });
-    return this.ordenarDesc(filtradas);
+    return this.sortDesc(filtered);
   }
 
-  async listarPorEntidade(entityType: string, entityId: string): Promise<AuditTrailEntry[]> {
-    const filtradas = this.linhas
+  async listByEntity(entityType: string, entityId: string): Promise<AuditTrailEntry[]> {
+    const filtered = this.rows
       .filter((r) => r.entityType === entityType && r.entityId === entityId)
-      .map((r) => this.paraEntidade(r));
-    return this.ordenarDesc(filtradas);
+      .map((r) => this.toEntity(r));
+    return this.sortDesc(filtered);
   }
 }

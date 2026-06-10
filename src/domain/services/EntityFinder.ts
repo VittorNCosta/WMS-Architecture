@@ -1,10 +1,10 @@
 import { DomainError } from '../errors/DomainError';
 
 /**
- * Domain Service que encapsula o padrão recorrente de buscar uma entidade
- * por id e lançar `DomainError` quando não encontrada.
+ * Domain Service that encapsulates the recurring pattern of finding an entity
+ * by id and throwing `DomainError` when not found.
  *
- * Mantém os UseCases livres do boilerplate `const x = await repo.buscarPorId(id);
+ * Keeps the UseCases free of the boilerplate `const x = await repo.findById(id);
  * if (!x) throw new DomainError(...)`.
  */
 export class EntityFinder {

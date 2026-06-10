@@ -1,21 +1,21 @@
 import { Request, Response } from 'express';
 import { DomainError } from '../../../domain/errors/DomainError';
-import { casosDeUso } from '../../container';
+import { useCases } from '../../container';
 
-/** Autenticação de usuários (acesso ao sistema). */
+/** User authentication (system access). */
 export const AuthController = {
   async login(req: Request, res: Response): Promise<void> {
     try {
-      const resultado = await casosDeUso.autenticarUsuario.execute({
+      const result = await useCases.authenticateUser.execute({
         login: req.body?.login,
         password: req.body?.password,
       });
-      res.status(200).json(resultado);
+      res.status(200).json(result);
     } catch (err) {
-      // Para login, qualquer DomainError (credencial inválida, login vazio etc.)
-      // é traduzido para 401 com mensagem genérica — não vaza informação.
+      // For login, any DomainError (invalid credential, empty login, etc.) is
+      // translated to 401 with a generic message — it does not leak information.
       if (err instanceof DomainError) {
-        res.status(401).json({ erro: 'Credenciais inválidas.' });
+        res.status(401).json({ error: 'Credenciais inválidas.' });
         return;
       }
       throw err;

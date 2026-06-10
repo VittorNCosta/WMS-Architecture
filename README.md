@@ -6,10 +6,10 @@ A partir desta versão, todas as rotas de `/api` (exceto `/api/login`) exigem um
 
 ### Credenciais padrão (seed)
 
-| Login      | Senha       | Perfil   |
-| ---------- | ----------- | -------- |
-| `admin`    | `trocar123` | ADMIN    |
-| `operador` | `trocar123` | OPERADOR |
+| Login   | Senha       | Perfil           |
+| ------- | ----------- | ---------------- |
+| `admin` | `wyms14623` | ADMIN            |
+| `lider` | `wyms14623` | LÍDER DE ESTOQUE |
 
 Essas credenciais são criadas automaticamente na primeira execução pelo `seed` (o arquivo `data/wms-db.json` **não** é versionado — fica no `.gitignore` e é gerado localmente). As senhas ficam armazenadas como hash bcrypt (`passwordHash`) — o texto puro nunca é persistido.
 
@@ -21,7 +21,7 @@ Content-Type: application/json
 
 {
   "login": "admin",
-  "password": "trocar123"
+  "password": "wyms14623"
 }
 ```
 
@@ -32,14 +32,14 @@ Resposta de sucesso (`200 OK`):
   "token": "<token-hex-64-caracteres>",
   "user": {
     "id": "...",
-    "nome": "Administrador",
+    "name": "Administrador",
     "login": "admin",
-    "perfil": "ADMIN"
+    "role": "ADMIN"
   }
 }
 ```
 
-Em caso de credenciais incorretas ou usuário inativo, a resposta é `401 Unauthorized` com `{ "erro": "Credenciais inválidas." }`.
+Em caso de credenciais incorretas ou usuário inativo, a resposta é `401 Unauthorized` com `{ "error": "Credenciais inválidas." }`.
 
 ### Como usar o token nas demais rotas
 
@@ -50,15 +50,25 @@ Authorization: Bearer <token>
 ```
 
 - Sem token / token inválido → `401`.
-- Token válido mas perfil insuficiente (ex.: OPERADOR tentando criar usuário) → `403`.
+- Token válido mas perfil insuficiente (ex.: RECEBIMENTO tentando armazenar, ou qualquer perfil não-ADMIN tentando criar usuário) → `403`.
 
-### Quais rotas exigem ADMIN
+### Controle de acesso por perfil
 
-- `POST /api/usuarios`
-- `PUT /api/usuarios/:id`
-- `PATCH /api/usuarios/:id/status`
+Os perfis e os processos que cada um pode executar:
 
-Todas as demais rotas autenticadas aceitam qualquer perfil ativo.
+| Perfil                          | Processos permitidos                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------ |
+| **RECEBIMENTO** (`RECEIVING`)   | Recebimento (`POST /api/receipts`)                                                   |
+| **EXPEDIÇÃO** (`SHIPPING`)      | Armazenagem (`POST /api/putaways`) e Expedição (`POST /api/shipments`)               |
+| **LÍDER DE ESTOQUE** (`STOCK_LEADER`) | Recebimento, Armazenagem, Transferência (`POST /api/transfers`) e cadastro de Produtos/Localizações |
+| **ADMIN**                       | Todos os processos + gestão de usuários                                              |
+
+Regras adicionais:
+
+- Escrita de **Produtos** (`POST`/`PUT /api/products`) e **Localizações** (`POST`/`PUT`/`PATCH /api/locations`): apenas `STOCK_LEADER` e `ADMIN`.
+- **Usuários** (`POST /api/users`, `PUT /api/users/:id`, `PATCH /api/users/:id/status`) e **Auditoria** (`GET /api/audit`): apenas `ADMIN`.
+- As rotas de **consulta** (`GET`) aceitam qualquer perfil autenticado e ativo.
+- Qualquer tentativa fora dessas regras retorna `403`.
 
 ---
 
@@ -137,6 +147,8 @@ Atualmente o sistema possui:
 - gerenciamento de localizações
 - persistência em arquivos JSON
 
+> **Nota sobre o idioma:** todo o código-fonte (entidades, casos de uso, repositórios, rotas HTTP e chaves de persistência) usa **nomenclatura em inglês**. As **mensagens visíveis ao usuário** (validações e textos das telas) permanecem em **português**.
+
 ---
 
 # Descrição das implementações e fluxo arquitetural
@@ -154,7 +166,7 @@ Cadastro de produtos.
 O fluxo começa nas rotas de produtos.
 
 ```text
-/api/produtos
+/api/products
 ```
 
 ---
@@ -167,10 +179,10 @@ Controller -> UseCase -> Repository -> Persistência
 
 Componentes envolvidos:
 
-- ProdutosController
-- CadastrarProduto
-- IProdutoRepository
-- JsonFileProdutoRepository
+- ProductsController
+- CreateProduct
+- IProductRepository
+- JsonFileProductRepository
 
 ---
 
@@ -193,7 +205,7 @@ Os dados são armazenados no arquivo:
 data/wms-db.json
 ```
 
-na coleção de produtos.
+na coleção `products`.
 
 ---
 
@@ -201,7 +213,7 @@ na coleção de produtos.
 
 Executar a rota:
 
-- POST `/api/produtos`
+- POST `/api/products`
 
 ---
 
@@ -223,9 +235,9 @@ Movimentação de estoque.
 
 O fluxo começa nas rotas:
 
-- `/api/recebimentos`
-- `/api/expedicoes`
-- `/api/movimentacoes`
+- `/api/receipts`
+- `/api/shipments`
+- `/api/movements`
 
 ---
 
@@ -237,13 +249,13 @@ Controller -> UseCase -> Repository -> Persistência
 
 Componentes envolvidos:
 
-- RecebimentoController
-- ExpedicaoController
-- ProcessarEntrada
-- ProcessarSaida
-- TransferirSaldo
-- IMovimentacaoRepository
-- JsonFileMovimentacaoRepository
+- ReceivingController
+- ShippingController
+- ProcessInbound
+- ProcessOutbound
+- TransferStock
+- IMovementRepository
+- JsonFileMovementRepository
 
 ---
 
@@ -268,7 +280,7 @@ Os dados são armazenados no arquivo:
 data/wms-db.json
 ```
 
-nas coleções de estoque e movimentações.
+nas coleções `stock` e `movements`.
 
 ---
 
@@ -276,9 +288,9 @@ nas coleções de estoque e movimentações.
 
 Executar as rotas:
 
-- POST `/api/recebimentos`
-- POST `/api/expedicoes`
-- GET `/api/movimentacoes`
+- POST `/api/receipts`
+- POST `/api/shipments`
+- GET `/api/movements`
 
 ---
 
@@ -301,7 +313,7 @@ Gerenciamento de usuários.
 O fluxo começa nas rotas:
 
 ```text
-/api/usuarios
+/api/users
 ```
 
 ---
@@ -314,13 +326,13 @@ Controller -> UseCase -> Repository -> Persistência
 
 Componentes envolvidos:
 
-- UsuariosController
-- CadastrarUsuario
-- AtualizarUsuario
-- AlterarStatusUsuario
-- ConsultarUsuario
-- IUsuarioRepository
-- JsonFileUsuarioRepository
+- UsersController
+- CreateUser
+- UpdateUser
+- ChangeUserStatus
+- GetUser
+- IUserRepository
+- JsonFileUserRepository
 
 ---
 
@@ -345,7 +357,7 @@ Os dados são armazenados no arquivo:
 data/wms-db.json
 ```
 
-na coleção de usuários.
+na coleção `users`.
 
 ---
 
@@ -353,10 +365,10 @@ na coleção de usuários.
 
 Executar as rotas:
 
-- POST `/api/usuarios`
-- GET `/api/usuarios`
-- PUT `/api/usuarios/:id`
-- PATCH `/api/usuarios/:id/status`
+- POST `/api/users`
+- GET `/api/users`
+- PUT `/api/users/:id`
+- PATCH `/api/users/:id/status`
 
 ---
 
@@ -385,7 +397,7 @@ Gerenciamento de localizações.
 O fluxo começa nas rotas:
 
 ```text
-/api/localizacoes
+/api/locations
 ```
 
 ---
@@ -398,13 +410,13 @@ Controller -> UseCase -> Repository -> Persistência
 
 Componentes envolvidos:
 
-- LocalizacoesController
-- CadastrarLocalizacao
-- AtualizarLocalizacao
-- AlterarStatusLocalizacao
-- ConsultarLocalizacao
-- ILocalizacaoRepository
-- JsonFileLocalizacaoRepository
+- LocationsController
+- CreateLocation
+- UpdateLocation
+- ChangeLocationStatus
+- GetLocation
+- ILocationRepository
+- JsonFileLocationRepository
 
 ---
 
@@ -428,7 +440,7 @@ Os dados são armazenados no arquivo:
 data/wms-db.json
 ```
 
-na coleção de localizações.
+na coleção `locations`.
 
 ---
 
@@ -436,10 +448,10 @@ na coleção de localizações.
 
 Executar as rotas:
 
-- POST `/api/localizacoes`
-- GET `/api/localizacoes`
-- PUT `/api/localizacoes/:id`
-- PATCH `/api/localizacoes/:id/status`
+- POST `/api/locations`
+- GET `/api/locations`
+- PUT `/api/locations/:id`
+- PATCH `/api/locations/:id/status`
 
 ---
 
@@ -478,16 +490,16 @@ perfil. Detalhes de uso (request/response) na seção **Autenticação** no topo
 deste README.
 
 - **Entrada verificável**: `POST /api/login` com `login` + `password`.
-- **Processamento / regra de negócio**: `AutenticarUsuario` valida login, compara
+- **Processamento / regra de negócio**: `AuthenticateUser` valida login, compara
   a senha contra o hash (`IHasher`/`BcryptHasher`), exige usuário ativo e abre a
   sessão (`ISessionStore`). A força mínima da senha é regra de domínio
   (`PasswordPolicy`).
-- **Acesso a dados**: `IUsuarioRepository` (busca por login) + `ISessionStore`.
+- **Acesso a dados**: `IUserRepository` (busca por login) + `ISessionStore`.
 - **Saída observável**: `200` com `{ token, user }` (sem `passwordHash`); `401`
   para credenciais inválidas/conta inativa; `403` quando um perfil não-ADMIN
   tenta uma rota restrita.
-- **Componentes**: `AuthController` → `AutenticarUsuario` →
-  `IHasher`/`ISessionStore`/`IUsuarioRepository`; nas demais rotas,
+- **Componentes**: `AuthController` → `AuthenticateUser` →
+  `IHasher`/`ISessionStore`/`IUserRepository`; nas demais rotas,
   `authenticationMiddleware` e `adminAuthorizationMiddleware`.
 
 ---
@@ -515,13 +527,13 @@ Controller -> (Actor a partir do req.user) -> UseCase -> registerAuditSafely -> 
 - O **caso de uso** executa sua regra principal e, ao final, chama
   `registerAuditSafely`, que grava a entrada **sem nunca derrubar a operação
   principal** (auditoria é efeito colateral — confiabilidade vem antes).
-- A consulta segue: `AuditoriaController -> ListAuditTrail -> IAuditTrailRepository`.
+- A consulta segue: `AuditController -> ListAuditTrail -> IAuditTrailRepository`.
 
 ---
 
 ## Componentes envolvidos
 
-- `AuditoriaController` (presentation)
+- `AuditController` (presentation)
 - `actorFromRequest` (presentation) + `Actor` (application)
 - `ListAuditTrail` (application — consulta com filtros)
 - `registerAuditSafely` (application — gravação tolerante a falhas)
@@ -543,20 +555,20 @@ Controller -> (Actor a partir do req.user) -> UseCase -> registerAuditSafely -> 
 
 ## Mecanismo de persistência
 
-Os dados são gravados no arquivo `data/wms-db.json`, na coleção `auditoria`,
+Os dados são gravados no arquivo `data/wms-db.json`, na coleção `audit`,
 seguindo o mesmo padrão `JsonFile*Repository` das demais entidades.
 
 ---
 
 ## Como executar e testar
 
-- `GET /api/auditoria` (header `Authorization: Bearer <token>` de um ADMIN)
-- Filtros opcionais por query string: `de`, `ate` (ISO 8601), `entityType`, `entityId`
+- `GET /api/audit` (header `Authorization: Bearer <token>` de um ADMIN)
+- Filtros opcionais por query string: `from`, `to` (ISO 8601), `entityType`, `entityId`
 
 Exemplo de entrada:
 
 ```http
-GET /api/auditoria?entityType=Produto
+GET /api/audit?entityType=Product
 Authorization: Bearer <token-admin>
 ```
 
@@ -566,18 +578,18 @@ Exemplo de saída (`200 OK`):
 [
   {
     "id": "5b676976-...",
-    "ocorridoEm": "2026-05-31T16:57:36.563Z",
-    "atorUserId": "5cd824d9-...",
-    "atorLogin": "admin",
-    "operacao": "CREATE",
-    "tipoEntidade": "Produto",
-    "entidadeId": "76e3de86-...",
-    "resumo": "Produto \"SKU-1\" cadastrado."
+    "occurredAt": "2026-05-31T16:57:36.563Z",
+    "actorUserId": "5cd824d9-...",
+    "actorLogin": "admin",
+    "operation": "CREATE",
+    "entityType": "Product",
+    "entityId": "76e3de86-...",
+    "summary": "Produto \"SKU-1\" cadastrado."
   }
 ]
 ```
 
-Um OPERADOR autenticado recebe `403 Forbidden` ao acessar a rota.
+Qualquer perfil não-ADMIN autenticado recebe `403 Forbidden` ao acessar a rota.
 
 ---
 
@@ -587,10 +599,10 @@ Cada melhoria abaixo responde a um ponto levantado na **avaliação da Sprint 2*
 
 | Ponto apontado na Sprint 2 | Correção aplicada na Sprint 3 |
 | --- | --- |
-| "o login só valida o login, sem senha" | Autenticação por senha com hash bcrypt (`AutenticarUsuario` + `IHasher`/`BcryptHasher` + `PasswordPolicy`). |
+| "o login só valida o login, sem senha" | Autenticação por senha com hash bcrypt (`AuthenticateUser` + `IHasher`/`BcryptHasher` + `PasswordPolicy`). |
 | "as rotas da API não parecem protegidas por middleware" | `authenticationMiddleware` (Bearer) em todas as rotas e `adminAuthorizationMiddleware` nas operações restritas. |
-| "a regra do último ADMIN aparece espalhada em mais de um caso de uso" | Regra centralizada no serviço de domínio `LastActiveAdminPolicy`, reutilizado por `AtualizarUsuario` e `AlterarStatusUsuario`. |
-| "`listar()` virou um método faz-tudo / baixa coesão" | `ConsultarEstoqueGeral` agora orquestra a I/O e delega a agregação/enriquecimento/ordenação ao `StockOverviewConsolidator`. |
+| "a regra do último ADMIN aparece espalhada em mais de um caso de uso" | Regra centralizada no serviço de domínio `LastActiveAdminPolicy`, reutilizado por `UpdateUser` e `ChangeUserStatus`. |
+| "`listar()` virou um método faz-tudo / baixa coesão" | `GetStockOverview` agora orquestra a I/O e delega a agregação/enriquecimento/ordenação ao `StockOverviewConsolidator`. |
 | ".claude / node_modules na entrega" | Ambos no `.gitignore` e fora do versionamento. |
 
 Melhorias estruturais adicionais:
@@ -601,8 +613,10 @@ Melhorias estruturais adicionais:
   HTTP do modelo de domínio (campos sensíveis como `passwordHash` nunca vazam).
 - **Auditoria como efeito colateral tolerante a falhas** (`registerAuditSafely`),
   sem acoplar o caso de uso principal à persistência da trilha.
-- **Padronização de nomenclatura** do domínio em português (remoção das entidades
-  e validadores duplicados em inglês), eliminando ambiguidade entre camadas.
+- **Padronização de nomenclatura em inglês** em todas as camadas (entidades,
+  casos de uso, serviços, repositórios, rotas HTTP e chaves de persistência),
+  eliminando duplicidades e ambiguidade entre camadas. As mensagens visíveis ao
+  usuário permanecem em português.
 
 ---
 
@@ -611,8 +625,8 @@ Melhorias estruturais adicionais:
 A suíte (`npm test`, Vitest) cobre o domínio, os serviços extraídos e as duas
 novas funcionalidades:
 
-- **Domínio**: `Usuario`, `Localizacao`, `PoliticaFifo`, `AuditTrailEntry`,
+- **Domínio**: `User`, `Location`, `FifoPolicy`, `AuditTrailEntry`,
   `LastActiveAdminPolicy`.
-- **Aplicação**: `AutenticarUsuario` (login/RBAC), `ListAuditTrail` e
+- **Aplicação**: `AuthenticateUser` (login/RBAC), `ListAuditTrail` e
   `registerAuditSafely` (auditoria), `StockOverviewConsolidator`,
-  `AlterarStatusUsuario`, `AlterarStatusLocalizacao`.
+  `ChangeUserStatus`, `ChangeLocationStatus`.

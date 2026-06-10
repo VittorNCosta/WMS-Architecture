@@ -1,13 +1,13 @@
 # Funcionalidade — Recebimento / Entrada do estoque
 
-> Registra a **entrada de um produto no estoque**: cria o saldo (item de estoque) e a movimentação de **ENTRADA**, com rastreabilidade de quem recebeu e sob qual documento.
+> Registra a **entrada de um produto no estoque**: cria o saldo (item de estoque) e a movimentação de **INBOUND**, com rastreabilidade de quem recebeu e sob qual documento.
 
 ## O que esta funcionalidade faz
 
-O **recebimento** é o ponto em que a mercadoria entra no armazém. A tela `recebimento.html`:
+O **recebimento** é o ponto em que a mercadoria entra no armazém. A tela `receiving.html`:
 
 - Permite escolher um **produto ativo**, a **quantidade** recebida, o **usuário responsável** e, opcionalmente, uma **localização** e um **documento de referência** (ex.: nota fiscal).
-- Ao confirmar, o backend cria um **item de estoque** (`EstoqueItem` — o saldo daquele recebimento, com sua `dataEntrada`, que é a base do FIFO na expedição) e registra uma **Movimentação do tipo ENTRADA**.
+- Ao confirmar, o backend cria um **item de estoque** (`StockItem` — o saldo daquele recebimento, com sua `entryDate`, que é a base do FIFO na expedição) e registra uma **Movimentação do tipo INBOUND**.
 - Em seguida, exibe o **ID do item de estoque gerado** e um atalho **"Armazenar este item"**, encadeando direto para a tela de Armazenagem.
 
 Cada recebimento gera **um item de estoque novo** (um "lote"), mesmo que o produto seja o mesmo — é assim que o sistema mantém a rastreabilidade e o FIFO.
@@ -28,11 +28,11 @@ Cada recebimento gera **um item de estoque novo** (um "lote"), mesmo que o produ
 2. **Estar autenticado.** Fluxo:
 
    1. `http://localhost:3333/` → login (`login.html`).
-   2. Login de teste do seed: **`admin`** ou **`operador`** (sem senha).
+   2. Login de teste do seed: **`admin`** ou **`operador`** (senha **`wyms14623`**).
    3. Sucesso → **menu** (`menu.html`).
-   4. No menu, clique em **Recebimento** → `recebimento.html`.
+   4. No menu, clique em **Recebimento** → `receiving.html`.
 
-   **Guarda de sessão (`sessao.js`):** sem sessão (não logou ou a aba foi fechada/reaberta) a tela **redireciona para o login** (`/`). **Sair** limpa a sessão.
+   **Guarda de sessão (`session.js`):** sem sessão (não logou ou a aba foi fechada/reaberta) a tela **redireciona para o login** (`/`). **Sair** limpa a sessão.
 
 3. **Pelo menos um produto ativo cadastrado.** O Recebimento só lista produtos **ativos**. Se não houver nenhum, a tela exibe um aviso e **desabilita o formulário** — cadastre o produto primeiro em **Produtos** (ver `docs/produtos.md`).
 
@@ -40,11 +40,11 @@ Cada recebimento gera **um item de estoque novo** (um "lote"), mesmo que o produ
 
 ## Como usar (passo a passo)
 
-Ao abrir `recebimento.html`, a tela carrega os catálogos para os campos de seleção:
+Ao abrir `receiving.html`, a tela carrega os catálogos para os campos de seleção:
 
-- **Produto** — `GET /api/produtos`, filtrando **apenas `ativo: true`**; cada opção aparece como `Nome (SKU)`.
-- **Usuário responsável** — `GET /api/usuarios` (do seed: `Administrador`, `Operador de Estoque`).
-- **Localização** — `GET /api/localizacoes`, com a opção padrão **"— sem localização —"** (do seed: `DOCA`, `A-01-01`, `A-01-02`).
+- **Produto** — `GET /api/products`, filtrando **apenas `active: true`**; cada opção aparece como `Nome (SKU)`.
+- **Usuário responsável** — `GET /api/users` (do seed: `Administrador`, `Operador de Estoque`).
+- **Localização** — `GET /api/locations`, com a opção padrão **"— sem localização —"** (do seed: `DOCA`, `A-01-01`, `A-01-02`).
 
 Preencha o formulário:
 
@@ -59,7 +59,7 @@ Preencha o formulário:
 Clique em **Dar entrada**:
 
 - A tela valida no navegador: produto selecionado, quantidade inteira ≥ 1, usuário selecionado.
-- Envia `POST /api/recebimentos`.
+- Envia `POST /api/receipts`.
 - **Sucesso:**
   - Mensagem verde "Entrada registrada".
   - Aparece o bloco **"Entrada registrada com sucesso"** com o campo **ID do item de estoque gerado** (somente leitura — copie este ID) e o botão **Armazenar este item**.
@@ -71,18 +71,18 @@ Clique em **Dar entrada**:
 Após o sucesso, o botão **Armazenar este item** leva para:
 
 ```
-armazenagem.html?estoqueItemId=<id-gerado>
+putaway.html?stockItemId=<id-gerado>
 ```
 
 Ou seja, abre a tela de **Armazenagem** já com o **ID do item de estoque preenchido** — basta escolher a localização e o usuário e confirmar (ver `docs/armazenagem.md`). Você também pode copiar o ID manualmente e colá-lo depois na tela de Armazenagem.
 
-> Se você informou uma **localização no recebimento**, o item já entra com essa localização. A etapa de **Armazenagem** registra uma movimentação de **ARMAZENAGEM** e (re)define a localização do item — é a etapa recomendada para rastrear o endereçamento físico no armazém.
+> Se você informou uma **localização no recebimento**, o item já entra com essa localização. A etapa de **Armazenagem** registra uma movimentação de **PUTAWAY** e (re)define a localização do item — é a etapa recomendada para rastrear o endereçamento físico no armazém.
 
 ---
 
 ## Regras de negócio e validações
 
-Validadas no backend (`ProcessarEntrada` + entidades). Regra violada → **HTTP 422** com `{ "erro": "mensagem" }`, exibida em vermelho na tela.
+Validadas no backend (`ProcessInbound` + entidades). Regra violada → **HTTP 422** com `{ "error": "mensagem" }`, exibida em vermelho na tela.
 
 - **Produto deve existir.** Se não: `Produto não encontrado.`
 - **Produto deve estar ATIVO.** Produto inativo: `Produto inativo não pode receber entrada.` (A tela já filtra inativos no campo de seleção; esta regra protege o backend.)
@@ -90,29 +90,29 @@ Validadas no backend (`ProcessarEntrada` + entidades). Regra violada → **HTTP 
 - **Localização (se informada) deve existir.** Se informada e inválida: `Localização não encontrada.` Se omitida (`null`), o item fica sem localização.
 - **Quantidade deve ser um número maior que zero.** Caso contrário: `Quantidade deve ser um número maior que zero.` (A tela ainda exige **inteiro ≥ 1**.)
 
-Em caso de sucesso, o backend cria o `EstoqueItem` (com `dataEntrada` = agora) e a `Movimentacao` tipo **ENTRADA** vinculada ao produto, usuário, localização de destino (se houver) e documento de referência (se houver).
+Em caso de sucesso, o backend cria o `StockItem` (com `entryDate` = agora) e a `Movement` tipo **INBOUND** vinculada ao produto, usuário, localização de destino (se houver) e documento de referência (se houver).
 
 ---
 
 ## Endpoint da API por trás
 
-Base: `/api`. Erros de regra: **422** `{ "erro": "..." }`.
+Base: `/api`. Erros de regra: **422** `{ "error": "..." }`.
 
 | Ação | Método | Caminho | Corpo (JSON) | Resposta |
 |---|---|---|---|---|
-| Dar entrada | `POST` | `/recebimentos` | `{ "produtoId", "quantidade", "usuarioId", "localizacaoId"?, "documentoReferencia"? }` | `201` + `{ "estoqueItem", "movimentacao" }` |
+| Dar entrada | `POST` | `/receipts` | `{ "productId", "quantity", "userId", "locationId"?, "referenceDocument"? }` | `201` + `{ "stockItem", "movement" }` |
 
 Catálogos de apoio usados pela tela para montar os campos de seleção:
 
 | Método | Caminho | Uso |
 |---|---|---|
-| `GET` | `/produtos` | Opções de produto (a tela filtra `ativo: true`) |
-| `GET` | `/usuarios` | Opções de usuário responsável |
-| `GET` | `/localizacoes` | Opções de localização (+ "— sem localização —") |
+| `GET` | `/products` | Opções de produto (a tela filtra `active: true`) |
+| `GET` | `/users` | Opções de usuário responsável |
+| `GET` | `/locations` | Opções de localização (+ "— sem localização —") |
 
-Resposta de sucesso (resumo): `estoqueItem` contém `id` (o ID usado na armazenagem), `produtoId`, `localizacaoId` (ou `null`), `quantidade`, `dataEntrada`; `movimentacao` é o registro tipo `ENTRADA`.
+Resposta de sucesso (resumo): `stockItem` contém `id` (o ID usado na armazenagem), `productId`, `locationId` (ou `null`), `quantity`, `entryDate`; `movement` é o registro tipo `INBOUND`.
 
-> `localizacaoId` e `documentoReferencia` são enviados como `null` quando deixados em branco na tela.
+> `locationId` e `referenceDocument` são enviados como `null` quando deixados em branco na tela.
 
 ---
 
@@ -135,11 +135,11 @@ Pré-condição: exista o produto `Caneta Azul (CANETA-AZUL)` **ativo** (ver `do
 **Equivalente via API:**
 
 ```bash
-# PRODUTO_ID: id do produto (GET /api/produtos);  USUARIO_ID: GET /api/usuarios
-curl -s -X POST localhost:3333/api/recebimentos \
+# PRODUTO_ID: id do produto (GET /api/products);  USUARIO_ID: GET /api/users
+curl -s -X POST localhost:3333/api/receipts \
   -H 'Content-Type: application/json' \
-  -d '{"produtoId":"PRODUTO_ID","quantidade":10,"usuarioId":"USUARIO_ID","documentoReferencia":"NF 12345"}'
-# a resposta traz estoqueItem.id -> use na armazenagem
+  -d '{"productId":"PRODUTO_ID","quantity":10,"userId":"USUARIO_ID","referenceDocument":"NF 12345"}'
+# a resposta traz stockItem.id -> use na armazenagem
 ```
 
 ---
@@ -150,8 +150,8 @@ curl -s -X POST localhost:3333/api/recebimentos \
 |---|---|---|
 | Aviso "Cadastre um produto ativo antes de registrar um recebimento." (formulário desabilitado) | Não há nenhum produto **ativo** no catálogo. | Vá em **Produtos**, cadastre/ative um produto e volte. |
 | `Produto inativo não pode receber entrada.` | O produto selecionado está inativo (caso o backend receba um produto inativo). | Ative o produto em **Produtos** (marque "Produto ativo") e tente de novo. |
-| `Produto não encontrado.` | O `produtoId` não existe (produto removido da base ou lista desatualizada). | Recarregue a tela para atualizar o catálogo e selecione de novo. |
-| `Usuário não encontrado.` | O `usuarioId` não existe. | Recarregue a tela; selecione um usuário do seed (`Administrador` / `Operador de Estoque`). |
+| `Produto não encontrado.` | O `productId` não existe (produto removido da base ou lista desatualizada). | Recarregue a tela para atualizar o catálogo e selecione de novo. |
+| `Usuário não encontrado.` | O `userId` não existe. | Recarregue a tela; selecione um usuário do seed (`Administrador` / `Operador de Estoque`). |
 | `Localização não encontrada.` | A localização informada não existe. | Recarregue a tela ou escolha "— sem localização —". |
 | `Quantidade deve ser um número maior que zero.` | Quantidade inválida chegou ao backend. | Informe um número inteiro ≥ 1. |
 | "Informe uma quantidade inteira maior ou igual a 1." | Validação do navegador (quantidade vazia, decimal ou < 1). | Corrija a quantidade. |

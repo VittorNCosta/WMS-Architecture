@@ -1,31 +1,28 @@
 import { AuditTrailEntry } from '../../domain/entities/AuditTrailEntry';
 
 /**
- * DTO de saída da trilha de auditoria (representação pública, serializável como JSON).
- *
- * Convenção: campos expostos ao cliente em pt-BR para manter consistência com
- * os demais endpoints HTTP do sistema.
+ * Audit trail output DTO (public representation, serializable as JSON).
  */
 export interface AuditTrailEntryDTO {
   id: string;
-  ocorridoEm: string; // ISO 8601
-  atorUserId: string;
-  atorLogin: string;
-  operacao: string;
-  tipoEntidade: string;
-  entidadeId: string;
-  resumo: string;
+  occurredAt: string; // ISO 8601
+  actorUserId: string;
+  actorLogin: string;
+  operation: string;
+  entityType: string;
+  entityId: string;
+  summary: string;
 }
 
 export function toAuditTrailEntryDTO(entry: AuditTrailEntry): AuditTrailEntryDTO {
   return {
     id: entry.id,
-    ocorridoEm: entry.occurredAt.toISOString(),
-    atorUserId: entry.actorUserId,
-    atorLogin: entry.actorLogin,
-    operacao: entry.operation,
-    tipoEntidade: entry.entityType,
-    entidadeId: entry.entityId,
-    resumo: entry.summary,
+    occurredAt: entry.occurredAt.toISOString(),
+    actorUserId: entry.actorUserId,
+    actorLogin: entry.actorLogin,
+    operation: entry.operation,
+    entityType: entry.entityType,
+    entityId: entry.entityId,
+    summary: entry.summary,
   };
 }

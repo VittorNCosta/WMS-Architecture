@@ -1,67 +1,104 @@
 import { Router } from 'express';
 import { asyncHandler } from './asyncHandler';
-import { ProdutosController } from './controllers/ProdutosController';
-import { RecebimentoController } from './controllers/RecebimentoController';
-import { MovimentacaoController } from './controllers/MovimentacaoController';
-import { ExpedicaoController } from './controllers/ExpedicaoController';
-import { EstoqueController } from './controllers/EstoqueController';
-import { RastreabilidadeController } from './controllers/RastreabilidadeController';
+import { ProductsController } from './controllers/ProductsController';
+import { ReceivingController } from './controllers/ReceivingController';
+import { MovementController } from './controllers/MovementController';
+import { ShippingController } from './controllers/ShippingController';
+import { StockController } from './controllers/StockController';
+import { TraceabilityController } from './controllers/TraceabilityController';
 import { AuthController } from './controllers/AuthController';
-import { UsuariosController } from './controllers/UsuariosController';
-import { LocalizacoesController } from './controllers/LocalizacoesController';
-import { AuditoriaController } from './controllers/AuditoriaController';
-import { authenticationMiddleware, adminAuthorizationMiddleware } from '../container';
+import { UsersController } from './controllers/UsersController';
+import { LocationsController } from './controllers/LocationsController';
+import { AuditController } from './controllers/AuditController';
+import { UserRole } from '../../domain/enums/UserRole';
+import { authenticationMiddleware, adminAuthorizationMiddleware, requireRoles } from '../container';
 
 export const router = Router();
 
-// --- Autenticação (rota pública, única sem authenticationMiddleware) ---
+// --- Authentication (public route, the only one without authenticationMiddleware) ---
 router.post('/login', asyncHandler(AuthController.login));
 
-// Todas as rotas abaixo exigem token Bearer válido.
+// All routes below require a valid Bearer token.
 router.use(authenticationMiddleware);
 
-// --- Produtos ---
-router.post('/produtos', asyncHandler(ProdutosController.criar));
-router.get('/produtos', asyncHandler(ProdutosController.listar));
-router.get('/produtos/:id', asyncHandler(ProdutosController.obter));
-router.put('/produtos/:id', asyncHandler(ProdutosController.atualizar));
-
-// --- Recebimento / armazenagem ---
-router.post('/recebimentos', asyncHandler(RecebimentoController.darEntrada));
-router.post('/armazenagens', asyncHandler(RecebimentoController.armazenar));
-
-// --- Movimentações / transferências ---
-router.post('/transferencias', asyncHandler(MovimentacaoController.transferir));
-
-// --- Expedição / saída ---
-router.post('/expedicoes', asyncHandler(ExpedicaoController.darSaida));
-
-// --- Estoque / saldo ---
-router.get('/estoque', asyncHandler(EstoqueController.listarGeral));
-router.get('/estoque/:produtoId', asyncHandler(EstoqueController.saldoPorProduto));
-
-// --- Rastreabilidade ---
-router.get('/movimentacoes', asyncHandler(RastreabilidadeController.listar));
-
-// --- Usuários: leitura para qualquer usuário autenticado ---
-router.get('/usuarios', asyncHandler(UsuariosController.listar));
-router.get('/usuarios/:id', asyncHandler(UsuariosController.obter));
-
-// --- Usuários: escrita exige perfil ADMIN ---
-router.post('/usuarios', adminAuthorizationMiddleware, asyncHandler(UsuariosController.criar));
-router.put('/usuarios/:id', adminAuthorizationMiddleware, asyncHandler(UsuariosController.atualizar));
-router.patch(
-  '/usuarios/:id/status',
-  adminAuthorizationMiddleware,
-  asyncHandler(UsuariosController.alterarStatus),
+// --- Products (write: stock leader + admin; read: any authenticated user) ---
+router.post(
+  '/products',
+  requireRoles(UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(ProductsController.create),
+);
+router.get('/products', asyncHandler(ProductsController.list));
+router.get('/products/:id', asyncHandler(ProductsController.get));
+router.put(
+  '/products/:id',
+  requireRoles(UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(ProductsController.update),
 );
 
-// --- Auditoria (somente leitura, restrita a ADMIN) ---
-router.get('/auditoria', adminAuthorizationMiddleware, asyncHandler(AuditoriaController.listar));
+// --- Receiving / putaway ---
+router.post(
+  '/receipts',
+  requireRoles(UserRole.RECEIVING, UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(ReceivingController.receive),
+);
+router.post(
+  '/putaways',
+  requireRoles(UserRole.SHIPPING, UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(ReceivingController.store),
+);
 
-// --- Localizações (CRUD + status) ---
-router.post('/localizacoes', asyncHandler(LocalizacoesController.criar));
-router.get('/localizacoes', asyncHandler(LocalizacoesController.listar));
-router.get('/localizacoes/:id', asyncHandler(LocalizacoesController.obter));
-router.put('/localizacoes/:id', asyncHandler(LocalizacoesController.atualizar));
-router.patch('/localizacoes/:id/status', asyncHandler(LocalizacoesController.alterarStatus));
+// --- Movements / transfers ---
+router.post(
+  '/transfers',
+  requireRoles(UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(MovementController.transfer),
+);
+
+// --- Shipping / outbound (same rule as putaway) ---
+router.post(
+  '/shipments',
+  requireRoles(UserRole.SHIPPING, UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(ShippingController.ship),
+);
+
+// --- Stock / balance ---
+router.get('/stock', asyncHandler(StockController.listOverview));
+router.get('/stock/:productId', asyncHandler(StockController.balanceByProduct));
+
+// --- Traceability ---
+router.get('/movements', asyncHandler(TraceabilityController.list));
+
+// --- Users: read access for any authenticated user ---
+router.get('/users', asyncHandler(UsersController.list));
+router.get('/users/:id', asyncHandler(UsersController.get));
+
+// --- Users: write access requires ADMIN role ---
+router.post('/users', adminAuthorizationMiddleware, asyncHandler(UsersController.create));
+router.put('/users/:id', adminAuthorizationMiddleware, asyncHandler(UsersController.update));
+router.patch(
+  '/users/:id/status',
+  adminAuthorizationMiddleware,
+  asyncHandler(UsersController.changeStatus),
+);
+
+// --- Audit (read-only, restricted to ADMIN) ---
+router.get('/audit', adminAuthorizationMiddleware, asyncHandler(AuditController.list));
+
+// --- Locations (write: stock leader + admin; read: any authenticated user) ---
+router.post(
+  '/locations',
+  requireRoles(UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(LocationsController.create),
+);
+router.get('/locations', asyncHandler(LocationsController.list));
+router.get('/locations/:id', asyncHandler(LocationsController.get));
+router.put(
+  '/locations/:id',
+  requireRoles(UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(LocationsController.update),
+);
+router.patch(
+  '/locations/:id/status',
+  requireRoles(UserRole.STOCK_LEADER, UserRole.ADMIN),
+  asyncHandler(LocationsController.changeStatus),
+);

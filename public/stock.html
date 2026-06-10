@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2e7d32" />
+  <title>WMS — Estoque</title>
+  <style>
+    :root {
+      --dark-green: #2e7d32;
+      --dark-green-hover: #1b5e20;
+      --light-green: #4caf50;
+      --white: #ffffff;
+      --border-gray: #cfd8dc;
+      --text-gray: #5f6b6d;
+      --dark-text: #1c2526;
+      --error-bg: #fdecea;
+      --error-border: #f5c6cb;
+      --error-text: #b71c1c;
+      --success-bg: #e8f5e9;
+      --success-border: #a5d6a7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--white);
+      color: var(--dark-text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: var(--white);
+      width: 100%;
+      max-width: 900px;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(27, 94, 32, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .card__header {
+      background: linear-gradient(135deg, var(--dark-green), var(--light-green));
+      color: var(--white);
+      padding: 2rem 1.75rem 1.75rem;
+      text-align: center;
+    }
+
+    .card__logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.85rem;
+      display: block;
+    }
+
+    .card__title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .card__subtitle {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+
+    .card__body {
+      padding: 1.75rem;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .top-bar__user {
+      font-size: 0.9rem;
+      color: var(--text-gray);
+    }
+
+    .top-bar__actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .section {
+      border: 1.5px solid var(--border-gray);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section__title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--dark-green);
+      margin-bottom: 1rem;
+    }
+
+    .field {
+      margin-bottom: 1.15rem;
+    }
+
+    .field__label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--dark-text);
+      margin-bottom: 0.4rem;
+    }
+
+    .field__input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      font-size: 1rem;
+      color: var(--dark-text);
+      border: 1.5px solid var(--border-gray);
+      border-radius: 8px;
+      background: var(--white);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+    }
+
+    .field__input:focus {
+      outline: none;
+      border-color: var(--light-green);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.22);
+    }
+
+    .field__input:disabled {
+      background: #f4f6f6;
+      color: #9aa5a6;
+      cursor: not-allowed;
+    }
+
+    .field__help {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text-gray);
+    }
+
+    .button {
+      padding: 0.8rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+      background: var(--dark-green);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+
+    .button:hover {
+      background: var(--dark-green-hover);
+    }
+
+    .button:active {
+      transform: translateY(1px);
+    }
+
+    .button:disabled {
+      background: #9aa5a6;
+      cursor: progress;
+    }
+
+    .button--secondary {
+      background: var(--white);
+      color: var(--dark-green);
+      border: 1.5px solid var(--border-gray);
+    }
+
+    .button--secondary:hover {
+      background: #f4f6f6;
+      color: var(--dark-green-hover);
+    }
+
+    .button--small {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+    }
+
+    .message {
+      margin-bottom: 1.1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1.5px solid transparent;
+      display: none;
+    }
+
+    .message--error {
+      display: block;
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error-text);
+    }
+
+    .message--success {
+      display: block;
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--dark-green-hover);
+    }
+
+    .message--success strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .filter {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+
+    .filter .field {
+      flex: 1 1 240px;
+      margin-bottom: 0;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--border-gray);
+    }
+
+    th {
+      background: #f4f6f6;
+      color: var(--text-gray);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    td.qty, th.qty {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    tr.row-subtotal td {
+      background: #eef5ef;
+      color: var(--dark-green-hover);
+      font-weight: 700;
+    }
+
+    tr.row-total td {
+      background: var(--success-bg);
+      color: var(--dark-green-hover);
+      font-weight: 700;
+      border-top: 2px solid var(--success-border);
+    }
+
+    .records {
+      margin-top: 0.85rem;
+      font-size: 0.82rem;
+      color: var(--text-gray);
+      text-align: right;
+    }
+
+    .empty {
+      padding: 1rem;
+      text-align: center;
+      color: var(--text-gray);
+      font-size: 0.9rem;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+    }
+
+    .footer a {
+      color: var(--dark-green);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .card__header { padding: 1.5rem 1.25rem; }
+      .card__body { padding: 1.5rem 1.25rem; }
+      .card__title { font-size: 1.2rem; }
+      .section { padding: 1rem; }
+      .filter { flex-direction: column; align-items: stretch; }
+      .filter .button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <header class="card__header">
+      <svg class="card__logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="m3 7.5 9 4.5 9-4.5M12 12v9" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M7.5 5.25 16.5 9.75" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+      <h1 class="card__title">WMS — Estoque</h1>
+      <p class="card__subtitle">Visão consolidada por localização e produto</p>
+    </header>
+
+    <div class="card__body">
+      <div class="top-bar">
+        <span class="top-bar__user" id="userBar"></span>
+        <span class="top-bar__actions">
+          <a class="button button--secondary button--small" href="menu.html">Menu</a>
+          <button class="button button--secondary button--small" type="button" id="logoutButton">Sair</button>
+        </span>
+      </div>
+
+      <div id="message" class="message" role="alert" aria-live="polite"></div>
+
+      <section class="section" aria-labelledby="stockTitle">
+        <h2 class="section__title" id="stockTitle">Estoque consolidado</h2>
+
+        <div class="filter">
+          <div class="field">
+            <label class="field__label" for="searchField">Buscar por produto ou localização</label>
+            <input class="field__input" type="text" id="searchField" autocomplete="off"
+              placeholder="Ex.: A-01-01, DOCA, SKU ou nome do produto" />
+          </div>
+          <button class="button button--secondary" type="button" id="refreshButton">Atualizar</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Localização</th>
+                <th scope="col">Produto</th>
+                <th scope="col" class="qty">Quantidade</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div id="emptyList" class="empty" hidden>Nenhum item em estoque.</div>
+        <p class="records" id="recordsCounter" hidden></p>
+      </section>
+
+      <p class="footer">
+        <a href="/status">Ver status do serviço</a>
+      </p>
+    </div>
+  </main>
+
+  <script src="session.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var user = requireSession();
+      if (!user) {
+        throw new Error('sem sessão');
+      }
+
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text == null ? '' : String(text);
+        return div.innerHTML;
+      }
+
+      var messageBox = document.getElementById('message');
+      var tableBody = document.getElementById('tableBody');
+      var emptyList = document.getElementById('emptyList');
+      var recordsCounter = document.getElementById('recordsCounter');
+      var searchField = document.getElementById('searchField');
+      var refreshButton = document.getElementById('refreshButton');
+
+      var currentStock = [];
+      var currentTotalQuantity = 0;
+
+      document.getElementById('userBar').innerHTML =
+        escapeHtml(user.name) + ' (' + escapeHtml(user.role) + ')';
+      document.getElementById('logoutButton').addEventListener('click', function () {
+        logout();
+      });
+
+      function showMessage(type, htmlContent) {
+        messageBox.className = 'message message--' + type;
+        messageBox.innerHTML = htmlContent;
+        messageBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function clearMessage() {
+        messageBox.className = 'message';
+        messageBox.innerHTML = '';
+      }
+
+      function errorMessageFromResponse(data, fallback) {
+        if (data && (data.error || data.message)) {
+          return data.error || data.message;
+        }
+        return fallback;
+      }
+
+      function readJson(response) {
+        return response.json()
+          .then(function (data) {
+            return { ok: response.ok, data: data };
+          })
+          .catch(function () {
+            return { ok: response.ok, data: null };
+          });
+      }
+
+      function locationLabel(row) {
+        if (row.locationId == null && row.locationCode == null) {
+          return '(sem localização)';
+        }
+        var code = row.locationCode == null ? '' : String(row.locationCode);
+        var description = row.locationDescription == null ? '' : String(row.locationDescription);
+        if (code === '' && description === '') {
+          return '(sem localização)';
+        }
+        if (description === '') {
+          return code;
+        }
+        if (code === '') {
+          return description;
+        }
+        return code + ' — ' + description;
+      }
+
+      function productLabel(row) {
+        var sku = row.productSku == null ? '' : String(row.productSku);
+        var name = row.productName == null ? '' : String(row.productName);
+        if (sku === '' && name === '') {
+          var id = row.productId == null ? '' : String(row.productId);
+          return id === '' ? '(desconhecido)' : id;
+        }
+        if (name === '') {
+          return sku;
+        }
+        if (sku === '') {
+          return name;
+        }
+        return sku + ' — ' + name;
+      }
+
+      function locationKey(row) {
+        if (row.locationId == null && row.locationCode == null) {
+          return ' sem-localizacao';
+        }
+        return locationLabel(row);
+      }
+
+      function addDataRow(locationText, productText, quantity) {
+        var tr = document.createElement('tr');
+
+        var tdLoc = document.createElement('td');
+        tdLoc.textContent = locationText;
+
+        var tdProd = document.createElement('td');
+        tdProd.textContent = productText;
+
+        var tdQty = document.createElement('td');
+        tdQty.className = 'qty';
+        tdQty.textContent = String(quantity);
+
+        tr.appendChild(tdLoc);
+        tr.appendChild(tdProd);
+        tr.appendChild(tdQty);
+        tableBody.appendChild(tr);
+      }
+
+      function addSubtotalRow(locationText, quantity) {
+        var tr = document.createElement('tr');
+        tr.className = 'row-subtotal';
+
+        var tdLabel = document.createElement('td');
+        tdLabel.colSpan = 2;
+        tdLabel.textContent = 'Subtotal — ' + locationText;
+
+        var tdQty = document.createElement('td');
+        tdQty.className = 'qty';
+        tdQty.textContent = String(quantity);
+
+        tr.appendChild(tdLabel);
+        tr.appendChild(tdQty);
+        tableBody.appendChild(tr);
+      }
+
+      function addGrandTotalRow(quantity) {
+        var tr = document.createElement('tr');
+        tr.className = 'row-total';
+
+        var tdLabel = document.createElement('td');
+        tdLabel.colSpan = 2;
+        tdLabel.textContent = 'Total geral';
+
+        var tdQty = document.createElement('td');
+        tdQty.className = 'qty';
+        tdQty.textContent = String(quantity);
+
+        tr.appendChild(tdLabel);
+        tr.appendChild(tdQty);
+        tableBody.appendChild(tr);
+      }
+
+      function render() {
+        tableBody.innerHTML = '';
+
+        var term = searchField.value.trim().toLowerCase();
+        var visible = currentStock.filter(function (row) {
+          if (term === '') {
+            return true;
+          }
+          var productTarget = productLabel(row).toLowerCase();
+          var locationTarget = locationLabel(row).toLowerCase();
+          return productTarget.indexOf(term) !== -1 || locationTarget.indexOf(term) !== -1;
+        });
+
+        if (currentStock.length === 0) {
+          emptyList.hidden = false;
+          emptyList.textContent = 'Nenhum item em estoque.';
+          recordsCounter.hidden = true;
+          return;
+        }
+
+        if (visible.length === 0) {
+          emptyList.hidden = false;
+          emptyList.textContent = 'Nenhum item corresponde ao filtro informado.';
+          recordsCounter.hidden = true;
+          return;
+        }
+
+        emptyList.hidden = true;
+
+        var currentGroupKey = null;
+        var currentGroupLabel = '';
+        var groupSubtotal = 0;
+        var visibleTotal = 0;
+
+        visible.forEach(function (row) {
+          var key = locationKey(row);
+          if (currentGroupKey !== null && key !== currentGroupKey) {
+            addSubtotalRow(currentGroupLabel, groupSubtotal);
+            groupSubtotal = 0;
+          }
+          if (key !== currentGroupKey) {
+            currentGroupKey = key;
+            currentGroupLabel = locationLabel(row);
+          }
+
+          var quantity = typeof row.quantity === 'number' ? row.quantity : 0;
+          addDataRow(locationLabel(row), productLabel(row), quantity);
+          groupSubtotal += quantity;
+          visibleTotal += quantity;
+        });
+
+        if (currentGroupKey !== null) {
+          addSubtotalRow(currentGroupLabel, groupSubtotal);
+        }
+
+        var displayedTotal = term === '' ? currentTotalQuantity : visibleTotal;
+        addGrandTotalRow(displayedTotal);
+
+        recordsCounter.hidden = false;
+        if (term === '') {
+          recordsCounter.textContent = 'Registros: ' + visible.length;
+        } else {
+          recordsCounter.textContent =
+            'Registros: ' + visible.length + ' de ' + currentStock.length;
+        }
+      }
+
+      function loadStock() {
+        tableBody.innerHTML = '';
+        emptyList.hidden = true;
+        recordsCounter.hidden = true;
+        refreshButton.disabled = true;
+        refreshButton.textContent = 'Atualizando...';
+
+        return apiFetch('/api/stock')
+          .then(readJson)
+          .then(function (result) {
+            if (!result.ok || !result.data || !Array.isArray(result.data.items)) {
+              currentStock = [];
+              currentTotalQuantity = 0;
+              emptyList.hidden = false;
+              emptyList.textContent = errorMessageFromResponse(
+                result.data, 'Não foi possível carregar o estoque.'
+              );
+              return;
+            }
+
+            currentStock = result.data.items;
+            currentTotalQuantity = typeof result.data.totalQuantity === 'number'
+              ? result.data.totalQuantity
+              : 0;
+            clearMessage();
+            render();
+          })
+          .catch(function () {
+            currentStock = [];
+            currentTotalQuantity = 0;
+            emptyList.hidden = false;
+            emptyList.textContent = 'Falha de conexão ao carregar o estoque.';
+          })
+          .finally(function () {
+            refreshButton.disabled = false;
+            refreshButton.textContent = 'Atualizar';
+          });
+      }
+
+      searchField.addEventListener('input', function () {
+        render();
+      });
+
+      refreshButton.addEventListener('click', function () {
+        clearMessage();
+        loadStock();
+      });
+
+      loadStock();
+    })();
+  </script>
+</body>
+</html>

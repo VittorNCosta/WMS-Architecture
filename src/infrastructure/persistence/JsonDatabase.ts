@@ -2,60 +2,60 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 /**
- * "Banco de dados" do projeto: um único arquivo JSON.
+ * Project "database": a single JSON file.
  *
- * Não é um SGBD — é só persistência simples em arquivo, suficiente para um
- * projeto de arquitetura. Guarda o estado em memória e regrava o arquivo
- * inteiro a cada alteração (`salvar()`).
+ * It is not a DBMS — just simple file persistence, enough for an architecture
+ * project. Keeps the state in memory and rewrites the whole file on every
+ * change (`save()`).
  *
- * Cada array abaixo é uma "tabela". As linhas são objetos planos (sem métodos);
- * a conversão linha <-> entidade de domínio é feita pelos repositórios.
+ * Each array below is a "table". Rows are plain objects (no methods); the
+ * row <-> domain-entity conversion is done by the repositories.
  */
 
-export interface ProdutoRow {
+export interface ProductRow {
   id: string;
   sku: string;
-  nome: string;
-  descricao: string | null;
-  unidadeMedida: string;
-  ativo: boolean;
-  criadoEm: string; // ISO 8601
-  atualizadoEm: string; // ISO 8601
+  name: string;
+  description: string | null;
+  unitOfMeasure: string;
+  active: boolean;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
 }
 
-export interface LocalizacaoRow {
+export interface LocationRow {
   id: string;
-  codigo: string;
-  descricao: string | null;
-  ativo: boolean;
+  code: string;
+  description: string | null;
+  active: boolean;
 }
 
-export interface EstoqueItemRow {
+export interface StockItemRow {
   id: string;
-  produtoId: string;
-  localizacaoId: string | null;
-  quantidade: number;
-  dataEntrada: string; // ISO 8601 — base do FIFO
+  productId: string;
+  locationId: string | null;
+  quantity: number;
+  entryDate: string; // ISO 8601 — FIFO basis
 }
 
-export interface MovimentacaoRow {
+export interface MovementRow {
   id: string;
-  tipo: string; // TipoMovimentacao
-  produtoId: string;
-  quantidade: number;
-  localizacaoOrigemId: string | null;
-  localizacaoDestinoId: string | null;
-  usuarioId: string;
-  documentoReferencia: string | null;
-  dataHora: string; // ISO 8601
+  type: string; // MovementType
+  productId: string;
+  quantity: number;
+  sourceLocationId: string | null;
+  destinationLocationId: string | null;
+  userId: string;
+  referenceDocument: string | null;
+  timestamp: string; // ISO 8601
 }
 
-export interface UsuarioRow {
+export interface UserRow {
   id: string;
-  nome: string;
+  name: string;
   login: string;
-  perfil: string; // PerfilUsuario
-  ativo: boolean;
+  role: string; // UserRole
+  active: boolean;
   passwordHash: string;
 }
 
@@ -70,52 +70,52 @@ export interface AuditTrailRow {
   summary: string;
 }
 
-export interface DadosBanco {
-  produtos: ProdutoRow[];
-  localizacoes: LocalizacaoRow[];
-  estoque: EstoqueItemRow[];
-  movimentacoes: MovimentacaoRow[];
-  usuarios: UsuarioRow[];
-  auditoria: AuditTrailRow[];
+export interface DatabaseData {
+  products: ProductRow[];
+  locations: LocationRow[];
+  stock: StockItemRow[];
+  movements: MovementRow[];
+  users: UserRow[];
+  audit: AuditTrailRow[];
 }
 
-function bancoVazio(): DadosBanco {
+function emptyDatabase(): DatabaseData {
   return {
-    produtos: [],
-    localizacoes: [],
-    estoque: [],
-    movimentacoes: [],
-    usuarios: [],
-    auditoria: [],
+    products: [],
+    locations: [],
+    stock: [],
+    movements: [],
+    users: [],
+    audit: [],
   };
 }
 
 export class JsonDatabase {
-  private readonly dados: DadosBanco;
+  private readonly data: DatabaseData;
 
-  constructor(private readonly caminhoArquivo: string) {
-    this.dados = this.carregar();
+  constructor(private readonly filePath: string) {
+    this.data = this.load();
   }
 
-  private carregar(): DadosBanco {
-    if (!existsSync(this.caminhoArquivo)) return bancoVazio();
+  private load(): DatabaseData {
+    if (!existsSync(this.filePath)) return emptyDatabase();
     try {
-      const bruto = JSON.parse(readFileSync(this.caminhoArquivo, 'utf-8')) as Partial<DadosBanco>;
-      return { ...bancoVazio(), ...bruto };
+      const raw = JSON.parse(readFileSync(this.filePath, 'utf-8')) as Partial<DatabaseData>;
+      return { ...emptyDatabase(), ...raw };
     } catch {
-      // arquivo inexistente/corrompido -> começa do zero
-      return bancoVazio();
+      // non-existent/corrupted file -> start from scratch
+      return emptyDatabase();
     }
   }
 
-  /** Retorna a "tabela" pedida. Depois de alterá-la, chame `salvar()`. */
-  tabela<K extends keyof DadosBanco>(nome: K): DadosBanco[K] {
-    return this.dados[nome];
+  /** Returns the requested "table". After changing it, call `save()`. */
+  table<K extends keyof DatabaseData>(name: K): DatabaseData[K] {
+    return this.data[name];
   }
 
-  /** Grava todo o estado atual no arquivo JSON. */
-  salvar(): void {
-    mkdirSync(dirname(this.caminhoArquivo), { recursive: true });
-    writeFileSync(this.caminhoArquivo, JSON.stringify(this.dados, null, 2) + '\n', 'utf-8');
+  /** Writes the whole current state to the JSON file. */
+  save(): void {
+    mkdirSync(dirname(this.filePath), { recursive: true });
+    writeFileSync(this.filePath, JSON.stringify(this.data, null, 2) + '\n', 'utf-8');
   }
 }

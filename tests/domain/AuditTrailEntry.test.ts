@@ -7,36 +7,36 @@ const baseInput = {
   actorUserId: 'u1',
   actorLogin: 'admin',
   operation: AuditOperation.CREATE,
-  entityType: 'Produto',
+  entityType: 'Product',
   entityId: 'p1',
   summary: 'Produto "SKU-1" cadastrado.',
 };
 
-describe('AuditTrailEntry (entidade de domínio)', () => {
-  it('cria uma entrada válida com id e occurredAt preenchidos', () => {
-    const entry = AuditTrailEntry.criar(baseInput);
+describe('AuditTrailEntry (domain entity)', () => {
+  it('creates a valid entry with id and occurredAt filled in', () => {
+    const entry = AuditTrailEntry.create(baseInput);
 
     expect(entry.id).toBeTruthy();
     expect(entry.occurredAt).toBeInstanceOf(Date);
     expect(entry.actorLogin).toBe('admin');
     expect(entry.operation).toBe(AuditOperation.CREATE);
-    expect(entry.entityType).toBe('Produto');
+    expect(entry.entityType).toBe('Product');
   });
 
-  it('rejeita ator ausente', () => {
-    expect(() => AuditTrailEntry.criar({ ...baseInput, actorUserId: '' })).toThrow(DomainError);
-    expect(() => AuditTrailEntry.criar({ ...baseInput, actorLogin: '  ' })).toThrow(DomainError);
+  it('rejects a missing actor', () => {
+    expect(() => AuditTrailEntry.create({ ...baseInput, actorUserId: '' })).toThrow(DomainError);
+    expect(() => AuditTrailEntry.create({ ...baseInput, actorLogin: '  ' })).toThrow(DomainError);
   });
 
-  it('rejeita operação inválida', () => {
+  it('rejects an invalid operation', () => {
     expect(() =>
-      AuditTrailEntry.criar({ ...baseInput, operation: 'HACK' as unknown as AuditOperation }),
+      AuditTrailEntry.create({ ...baseInput, operation: 'HACK' as unknown as AuditOperation }),
     ).toThrow(DomainError);
   });
 
-  it('rejeita entidade e resumo ausentes', () => {
-    expect(() => AuditTrailEntry.criar({ ...baseInput, entityType: '' })).toThrow(DomainError);
-    expect(() => AuditTrailEntry.criar({ ...baseInput, entityId: '' })).toThrow(DomainError);
-    expect(() => AuditTrailEntry.criar({ ...baseInput, summary: '' })).toThrow(DomainError);
+  it('rejects missing entity and summary', () => {
+    expect(() => AuditTrailEntry.create({ ...baseInput, entityType: '' })).toThrow(DomainError);
+    expect(() => AuditTrailEntry.create({ ...baseInput, entityId: '' })).toThrow(DomainError);
+    expect(() => AuditTrailEntry.create({ ...baseInput, summary: '' })).toThrow(DomainError);
   });
 });

@@ -1,46 +1,47 @@
 import { RequestHandler } from 'express';
-import { Usuario } from '../../../domain/entities/Usuario';
+import { User } from '../../../domain/entities/User';
 import { ISessionStore } from '../../../domain/ports/ISessionStore';
-import { IUsuarioRepository } from '../../../domain/repositories/IUsuarioRepository';
+import { IUserRepository } from '../../../domain/repositories/IUserRepository';
 
 /**
- * Factory que produz o middleware de autenticação por token Bearer.
+ * Factory that produces the Bearer-token authentication middleware.
  *
- * Espera `Authorization: Bearer <token>`. Em qualquer falha (header ausente,
- * formato errado, token desconhecido, usuário inexistente ou inativo), responde
- * 401 com mensagem genérica. Em sucesso, anexa `req.user` e segue o pipeline.
+ * Expects `Authorization: Bearer <token>`. On any failure (missing header,
+ * wrong format, unknown token, non-existent or inactive user), responds 401
+ * with a generic message. On success, attaches `req.user` and continues the
+ * pipeline.
  */
 export function buildAuthenticationMiddleware(
   sessions: ISessionStore,
-  usuarios: IUsuarioRepository,
+  users: IUserRepository,
 ): RequestHandler {
   return async (req, res, next) => {
     try {
       const header = req.headers.authorization;
       if (typeof header !== 'string' || !header.startsWith('Bearer ')) {
-        res.status(401).json({ erro: 'Token de autenticação ausente ou inválido.' });
+        res.status(401).json({ error: 'Token de autenticação ausente ou inválido.' });
         return;
       }
 
       const token = header.slice('Bearer '.length).trim();
       if (token.length === 0) {
-        res.status(401).json({ erro: 'Token de autenticação ausente ou inválido.' });
+        res.status(401).json({ error: 'Token de autenticação ausente ou inválido.' });
         return;
       }
 
       const userId = await sessions.getUserId(token);
       if (!userId) {
-        res.status(401).json({ erro: 'Token de autenticação ausente ou inválido.' });
+        res.status(401).json({ error: 'Token de autenticação ausente ou inválido.' });
         return;
       }
 
-      const usuario = await usuarios.buscarPorId(userId);
-      if (!usuario || !usuario.ativo) {
-        res.status(401).json({ erro: 'Token de autenticação ausente ou inválido.' });
+      const user = await users.findById(userId);
+      if (!user || !user.active) {
+        res.status(401).json({ error: 'Token de autenticação ausente ou inválido.' });
         return;
       }
 
-      (req as unknown as { user: Usuario }).user = usuario;
+      (req as unknown as { user: User }).user = user;
       next();
     } catch (err) {
       next(err);

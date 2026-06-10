@@ -3,24 +3,17 @@ import { AuditOperation } from '../enums/AuditOperation';
 import { DomainError } from '../errors/DomainError';
 
 /**
- * Dados de entrada para criar uma entrada da trilha de auditoria.
- * `summary` é uma frase curta legível por humano (ex.: `Usuário "admin" cadastrado.`).
+ * Input data to create an audit trail entry.
+ * `summary` is a short human-readable phrase (e.g. `Usuário "admin" cadastrado.`).
  */
 export interface AuditTrailEntryInput {
   actorUserId: string;
   actorLogin: string;
   operation: AuditOperation;
-  entityType: string; // 'Usuario' | 'Produto' | 'Localizacao' | 'Estoque' | 'Inventario'
+  entityType: string; // 'User' | 'Product' | 'Location' | 'Stock' | 'Inventory'
   entityId: string;
   summary: string;
 }
-
-/**
- * Registro imutável de uma operação de negócio realizada por um ator.
- *
- * Ao contrário de `Movimentacao` (que descreve mudança de saldo), uma
- * `AuditTrailEntry` descreve a ação em si: quem fez, sobre o quê, quando.
- */
 export class AuditTrailEntry {
   constructor(
     public readonly id: string,
@@ -33,21 +26,21 @@ export class AuditTrailEntry {
     public readonly summary: string,
   ) {}
 
-  static criar(input: AuditTrailEntryInput): AuditTrailEntry {
+  static create(input: AuditTrailEntryInput): AuditTrailEntry {
     if (typeof input.actorUserId !== 'string' || input.actorUserId.trim().length === 0) {
-      throw new DomainError('Auditoria: atorUserId obrigatório.');
+      throw new DomainError('Auditoria: actorUserId obrigatório.');
     }
     if (typeof input.actorLogin !== 'string' || input.actorLogin.trim().length === 0) {
-      throw new DomainError('Auditoria: atorLogin obrigatório.');
+      throw new DomainError('Auditoria: actorLogin obrigatório.');
     }
     if (!Object.values(AuditOperation).includes(input.operation)) {
       throw new DomainError('Auditoria: operação inválida.');
     }
     if (typeof input.entityType !== 'string' || input.entityType.trim().length === 0) {
-      throw new DomainError('Auditoria: tipoEntidade obrigatório.');
+      throw new DomainError('Auditoria: entityType obrigatório.');
     }
     if (typeof input.entityId !== 'string' || input.entityId.trim().length === 0) {
-      throw new DomainError('Auditoria: entidadeId obrigatório.');
+      throw new DomainError('Auditoria: entityId obrigatório.');
     }
     if (typeof input.summary !== 'string' || input.summary.trim().length === 0) {
       throw new DomainError('Auditoria: resumo obrigatório.');

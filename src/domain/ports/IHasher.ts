@@ -1,8 +1,8 @@
 /**
- * Porta de domínio para hashing de senhas.
+ * Domain port for password hashing.
  *
- * A camada Application depende desta abstração; a implementação concreta
- * (BcryptHasher, por exemplo) vive em Infrastructure.
+ * The Application layer depends on this abstraction; the concrete
+ * implementation (BcryptHasher, for example) lives in Infrastructure.
  */
 export interface IHasher {
   hash(plain: string): Promise<string>;

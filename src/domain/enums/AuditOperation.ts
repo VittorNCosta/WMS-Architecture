@@ -1,10 +1,10 @@
 /**
- * Tipos de operação registrados na trilha de auditoria operacional.
+ * Operation types recorded in the operational audit trail.
  *
- * Atenção: auditoria != rastreabilidade. Rastreabilidade de estoque é tratada
- * por `Movimentacao` (saldo por produto). Aqui registra-se QUEM fez QUAL
- * operação em QUAL recurso — inclusive cadastros, atualizações e mudanças de
- * status que não mexem em saldo.
+ * Note: audit != traceability. Stock traceability is handled by `Movement`
+ * (balance per product). Here we record WHO did WHICH operation on WHICH
+ * resource — including creations, updates and status changes that do not
+ * affect balance.
  */
 export enum AuditOperation {
   CREATE = 'CREATE',

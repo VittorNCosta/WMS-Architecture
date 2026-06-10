@@ -1,8 +1,8 @@
 /**
- * Porta de domínio para armazenamento de sessões/tokens.
+ * Domain port for session/token storage.
  *
- * Permite trocar a implementação (em memória, Redis, DB) sem afetar a
- * camada Application.
+ * Allows swapping the implementation (in-memory, Redis, DB) without
+ * affecting the Application layer.
  */
 export interface ISessionStore {
   create(userId: string): Promise<string>;

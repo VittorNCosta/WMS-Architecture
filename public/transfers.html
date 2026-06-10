@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2e7d32" />
+  <title>WMS — Movimentações</title>
+  <style>
+    :root {
+      --dark-green: #2e7d32;
+      --dark-green-hover: #1b5e20;
+      --light-green: #4caf50;
+      --white: #ffffff;
+      --border-gray: #cfd8dc;
+      --text-gray: #5f6b6d;
+      --dark-text: #1c2526;
+      --error-bg: #fdecea;
+      --error-border: #f5c6cb;
+      --error-text: #b71c1c;
+      --warning-bg: #fff8e1;
+      --warning-border: #ffe082;
+      --warning-text: #8d6e00;
+      --success-bg: #e8f5e9;
+      --success-border: #a5d6a7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--white);
+      color: var(--dark-text);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .card {
+      background: var(--white);
+      width: 100%;
+      max-width: 480px;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(27, 94, 32, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .card__header {
+      background: linear-gradient(135deg, var(--dark-green), var(--light-green));
+      color: var(--white);
+      padding: 2rem 1.75rem 1.75rem;
+      text-align: center;
+    }
+
+    .card__logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.85rem;
+      display: block;
+    }
+
+    .card__title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .card__subtitle {
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+
+    .card__body {
+      padding: 1.75rem;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .top-bar__user {
+      font-size: 0.9rem;
+      color: var(--text-gray);
+    }
+
+    .top-bar__actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .field {
+      margin-bottom: 1.15rem;
+    }
+
+    .field__label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--dark-text);
+      margin-bottom: 0.4rem;
+    }
+
+    .field__required {
+      color: var(--error-text);
+    }
+
+    .field__input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      font-size: 1rem;
+      color: var(--dark-text);
+      border: 1.5px solid var(--border-gray);
+      border-radius: 8px;
+      background: var(--white);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+    }
+
+    select.field__input {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2024%2024'%20fill%3D'none'%20stroke%3D'%235f6b6d'%20stroke-width%3D'2'%3E%3Cpath%20d%3D'M6%209l6%206%206-6'%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.7rem center;
+      background-size: 1rem;
+      padding-right: 2.2rem;
+    }
+
+    .field__input:focus {
+      outline: none;
+      border-color: var(--light-green);
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.22);
+    }
+
+    .field__input:disabled {
+      background: #f4f6f6;
+      color: #9aa5a6;
+      cursor: not-allowed;
+    }
+
+    .field__help {
+      margin-top: 0.35rem;
+      font-size: 0.78rem;
+      color: var(--text-gray);
+    }
+
+    .button {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+      background: var(--dark-green);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+
+    .button:hover {
+      background: var(--dark-green-hover);
+    }
+
+    .button:active {
+      transform: translateY(1px);
+    }
+
+    .button:disabled {
+      background: #9aa5a6;
+      cursor: progress;
+    }
+
+    .button--secondary {
+      width: auto;
+      background: var(--white);
+      color: var(--dark-green);
+      border: 1.5px solid var(--border-gray);
+    }
+
+    .button--secondary:hover {
+      background: #f4f6f6;
+      color: var(--dark-green-hover);
+    }
+
+    .button--small {
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+    }
+
+    .message {
+      margin-bottom: 1.1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      border: 1.5px solid transparent;
+      display: none;
+    }
+
+    .message--error {
+      display: block;
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error-text);
+    }
+
+    .message--warning {
+      display: block;
+      background: var(--warning-bg);
+      border-color: var(--warning-border);
+      color: var(--warning-text);
+    }
+
+    .message--success {
+      display: block;
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--dark-green-hover);
+    }
+
+    .message--success strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+    }
+
+    .footer a {
+      color: var(--dark-green);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .card__header { padding: 1.5rem 1.25rem; }
+      .card__body { padding: 1.5rem 1.25rem; }
+      .card__title { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <header class="card__header">
+      <svg class="card__logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="m3 7.5 9 4.5 9-4.5M12 12v9" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M7.5 5.25 16.5 9.75" stroke="#ffffff" stroke-width="1.6" stroke-linejoin="round" />
+      </svg>
+      <h1 class="card__title">WMS — Movimentações</h1>
+      <p class="card__subtitle">Transferência de saldo entre localizações (FIFO)</p>
+    </header>
+
+    <div class="card__body">
+      <div class="top-bar">
+        <span class="top-bar__user" id="userBar"></span>
+        <span class="top-bar__actions">
+          <a class="button button--secondary button--small" href="menu.html">Menu</a>
+          <button class="button button--secondary button--small" type="button" id="logoutButton">Sair</button>
+        </span>
+      </div>
+
+      <div id="message" class="message" role="alert" aria-live="polite"></div>
+
+      <form id="transferForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="product">Produto <span class="field__required" aria-hidden="true">*</span></label>
+          <select class="field__input" id="product" required>
+            <option value="">Carregando produtos...</option>
+          </select>
+          <p class="field__help">A transferência consome o estoque mais antigo da origem (FIFO).</p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="source">Localização de origem <span class="field__required" aria-hidden="true">*</span></label>
+          <select class="field__input" id="source" required>
+            <option value="">Carregando localizações...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="destination">Localização de destino <span class="field__required" aria-hidden="true">*</span></label>
+          <select class="field__input" id="destination" required>
+            <option value="">Carregando localizações...</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="quantity">Quantidade <span class="field__required" aria-hidden="true">*</span></label>
+          <input class="field__input" type="number" id="quantity" min="1" step="1" placeholder="Ex.: 10" required />
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="user">Usuário responsável <span class="field__required" aria-hidden="true">*</span></label>
+          <select class="field__input" id="user" required>
+            <option value="">Carregando usuários...</option>
+          </select>
+        </div>
+
+        <button class="button" type="submit" id="transferButton">Transferir</button>
+      </form>
+
+      <p class="footer">
+        <a href="/status">Ver status do serviço</a>
+      </p>
+    </div>
+  </main>
+
+  <script src="session.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      var user = requireSession();
+      if (!user) {
+        throw new Error('sem sessão');
+      }
+
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text == null ? '' : String(text);
+        return div.innerHTML;
+      }
+
+      var messageBox = document.getElementById('message');
+      var form = document.getElementById('transferForm');
+      var selProduct = document.getElementById('product');
+      var selSource = document.getElementById('source');
+      var selDestination = document.getElementById('destination');
+      var selUser = document.getElementById('user');
+      var quantityField = document.getElementById('quantity');
+      var transferButton = document.getElementById('transferButton');
+
+      document.getElementById('userBar').innerHTML =
+        escapeHtml(user.name) + ' (' + escapeHtml(user.role) + ')';
+      document.getElementById('logoutButton').addEventListener('click', function () {
+        logout();
+      });
+
+      function showMessage(type, htmlContent) {
+        messageBox.className = 'message message--' + type;
+        messageBox.innerHTML = htmlContent;
+      }
+
+      function clearMessage() {
+        messageBox.className = 'message';
+        messageBox.innerHTML = '';
+      }
+
+      function errorMessageFromResponse(data, fallback) {
+        if (data && (data.error || data.message)) {
+          return data.error || data.message;
+        }
+        return fallback;
+      }
+
+      function readJson(response) {
+        return response.json()
+          .then(function (data) {
+            return { ok: response.ok, data: data };
+          })
+          .catch(function () {
+            return { ok: response.ok, data: null };
+          });
+      }
+
+      function addOption(select, value, label) {
+        var opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = label;
+        select.appendChild(opt);
+      }
+
+      function loadProducts() {
+        return apiFetch('/api/products')
+          .then(readJson)
+          .then(function (result) {
+            selProduct.innerHTML = '';
+            if (!result.ok || !Array.isArray(result.data)) {
+              addOption(selProduct, '', 'Erro ao carregar produtos');
+              throw new Error('products');
+            }
+            var active = result.data.filter(function (p) {
+              return p && p.active === true;
+            });
+            if (active.length === 0) {
+              addOption(selProduct, '', 'Nenhum produto ativo');
+              showMessage('warning', 'Não há produtos ativos para movimentar.');
+              return;
+            }
+            addOption(selProduct, '', 'Selecione um produto');
+            active.forEach(function (p) {
+              addOption(selProduct, p.id, String(p.name) + ' (' + String(p.sku) + ')');
+            });
+          });
+      }
+
+      function fillLocations(select, result, placeholder) {
+        select.innerHTML = '';
+        if (!result.ok || !Array.isArray(result.data)) {
+          addOption(select, '', 'Erro ao carregar localizações');
+          throw new Error('locations');
+        }
+        if (result.data.length === 0) {
+          addOption(select, '', 'Nenhuma localização disponível');
+          return;
+        }
+        addOption(select, '', placeholder);
+        result.data.forEach(function (l) {
+          var label = l.description
+            ? String(l.code) + ' — ' + String(l.description)
+            : String(l.code);
+          addOption(select, l.id, label);
+        });
+      }
+
+      function loadLocations() {
+        return apiFetch('/api/locations')
+          .then(readJson)
+          .then(function (result) {
+            fillLocations(selSource, result, 'Selecione a origem');
+            fillLocations(selDestination, result, 'Selecione o destino');
+          });
+      }
+
+      function loadUsers() {
+        return apiFetch('/api/users')
+          .then(readJson)
+          .then(function (result) {
+            selUser.innerHTML = '';
+            if (!result.ok || !Array.isArray(result.data)) {
+              addOption(selUser, '', 'Erro ao carregar usuários');
+              throw new Error('users');
+            }
+            addOption(selUser, '', 'Selecione um usuário');
+            result.data.forEach(function (u) {
+              addOption(selUser, u.id, String(u.name));
+            });
+          });
+      }
+
+      Promise.all([
+        loadProducts().catch(function () { /* error already reflected in the select */ }),
+        loadLocations().catch(function () { /* error already reflected in the select */ }),
+        loadUsers().catch(function () { /* error already reflected in the select */ })
+      ]).catch(function () {
+        showMessage('error', 'Falha de conexão ao carregar os dados. Recarregue a página.');
+      });
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        clearMessage();
+
+        var productId = selProduct.value;
+        var sourceLocationId = selSource.value;
+        var destinationLocationId = selDestination.value;
+        var userId = selUser.value;
+        var rawQuantity = quantityField.value.trim();
+        var quantity = Number(rawQuantity);
+
+        if (productId === '') {
+          showMessage('error', 'Selecione um produto.');
+          selProduct.focus();
+          return;
+        }
+        if (sourceLocationId === '') {
+          showMessage('error', 'Selecione a localização de origem.');
+          selSource.focus();
+          return;
+        }
+        if (destinationLocationId === '') {
+          showMessage('error', 'Selecione a localização de destino.');
+          selDestination.focus();
+          return;
+        }
+        if (sourceLocationId === destinationLocationId) {
+          showMessage('error', 'A origem e o destino devem ser diferentes.');
+          selDestination.focus();
+          return;
+        }
+        if (rawQuantity === '' || !Number.isInteger(quantity) || quantity <= 0) {
+          showMessage('error', 'Informe uma quantidade inteira maior que zero.');
+          quantityField.focus();
+          return;
+        }
+        if (userId === '') {
+          showMessage('error', 'Selecione o usuário responsável.');
+          selUser.focus();
+          return;
+        }
+
+        var body = {
+          productId: productId,
+          sourceLocationId: sourceLocationId,
+          destinationLocationId: destinationLocationId,
+          quantity: quantity,
+          userId: userId
+        };
+
+        transferButton.disabled = true;
+        transferButton.textContent = 'Enviando...';
+
+        apiFetch('/api/transfers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
+          .then(readJson)
+          .then(function (result) {
+            if (!result.ok) {
+              showMessage('error', escapeHtml(
+                errorMessageFromResponse(result.data, 'Não foi possível registrar a transferência.')
+              ));
+              return;
+            }
+            var mov = result.data || {};
+            showMessage('success',
+              '<strong>Transferência registrada</strong>' +
+              'Movimentação de transferência registrada' +
+              (mov.id ? ' (ID ' + escapeHtml(mov.id) + ')' : '') + '.'
+            );
+            form.reset();
+          })
+          .catch(function () {
+            showMessage('error', 'Falha de conexão com o servidor. Verifique sua rede e tente novamente.');
+          })
+          .finally(function () {
+            transferButton.disabled = false;
+            transferButton.textContent = 'Transferir';
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

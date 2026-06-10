@@ -7,11 +7,11 @@ interface SessionEntry {
 }
 
 /**
- * Implementação de ISessionStore em memória.
+ * In-memory ISessionStore implementation.
  *
- * Tokens são strings hex aleatórias de 32 bytes (256 bits). Suficiente para
- * autenticação simples em um projeto acadêmico — para produção, trocar por
- * Redis/JWT, mas o contrato (ISessionStore) permanece o mesmo.
+ * Tokens are random 32-byte (256-bit) hex strings. Enough for simple
+ * authentication in an academic project — for production, swap for Redis/JWT,
+ * but the contract (ISessionStore) stays the same.
  */
 export class InMemorySessionStore implements ISessionStore {
   private readonly sessions = new Map<string, SessionEntry>();
